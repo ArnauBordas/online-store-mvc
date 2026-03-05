@@ -50,7 +50,7 @@ public class Vista {
 
             switch (opcion) {
                 case 1:
-                    menuArticulos(); // ✅ TU PARTE
+                    menuArticulos();
                     break;
 
                 case 2:
@@ -58,7 +58,7 @@ public class Vista {
                     break;
 
                 case 3:
-                    System.out.println("Gestión de pedidos (pendiente de implementar).");
+                    menuPedidos();
                     break;
 
                 case 0:
@@ -156,6 +156,75 @@ public class Vista {
         }
     }
 
+    private void menuPedidos() {
+        int opcion;
+
+        do {
+            System.out.println("\n--- GESTIÓN DE PEDIDOS ---");
+            System.out.println("1. Añadir pedido");
+            System.out.println("2. Eliminar pedido");
+            System.out.println("3. Mostrar pedidos pendientes");
+            System.out.println("4. Mostrar pedidos enviados");
+            System.out.println("0. Volver");
+            opcion = leerEntero("Selecciona una opción: ");
+
+            switch (opcion) {
+                case 1:
+                    anadirPedido();
+                    break;
+                case 2:
+                    eliminarPedido();
+                    break;
+                case 3:
+                    mostrarPedidosPendientes();
+                    break;
+                case 4:
+                    mostrarPedidosEnviados();
+                    break;
+                case 0:
+                    break;
+                default:
+                    System.out.println("Opción no válida.");
+            }
+
+        } while (opcion != 0);
+    }
+
+    private void anadirPedido() {
+        System.out.println("\nAñadir pedido");
+
+        // Datos del cliente
+        String nombreCliente = leerTexto("Nombre del cliente: ");
+        String emailCliente = leerTexto("Email del cliente: ");
+        boolean esPremium = leerTexto("¿Cliente premium? (s/n): ").equalsIgnoreCase("s");
+
+        // Datos del artículo
+        String codigoArticulo = leerTexto("Código del artículo: ");
+        int cantidad = leerEntero("Cantidad: ");
+
+        // Llamada al controlador
+        controlador.anadirPedido(nombreCliente, emailCliente, esPremium, codigoArticulo, cantidad);
+    }
+
+    private void eliminarPedido() {
+        System.out.println("\nEliminar pedido");
+        int numeroPedido = leerEntero("Número de pedido: ");
+        controlador.eliminarPedido(numeroPedido);
+    }
+
+    private void mostrarPedidosPendientes() {
+        System.out.println("\nMostrar pedidos pendientes");
+        String nombreCliente = leerTexto("Filtrar por cliente (dejar vacío para todos): ");
+        if(nombreCliente.isEmpty()) nombreCliente = null;
+        controlador.mostrarPedidosPendientes(nombreCliente);
+    }
+
+    private void mostrarPedidosEnviados() {
+        System.out.println("\nMostrar pedidos enviados");
+        String nombreCliente = leerTexto("Filtrar por cliente (dejar vacío para todos): ");
+        if(nombreCliente.isEmpty()) nombreCliente = null;
+        controlador.mostrarPedidosEnviados(nombreCliente);
+    }
     /* =========================================================
        ================== MÉTODOS AUXILIARES ===================
        ========================================================= */
