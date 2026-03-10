@@ -1,8 +1,16 @@
 package bugbusters.controlador;
 
-import bugbusters.modelo.*;
+import bugbusters.modelo.Articulo;
+import bugbusters.modelo.Cliente;
+import bugbusters.modelo.ClienteEstandar;
+import bugbusters.modelo.ClientePremium;
+import bugbusters.modelo.Datos;
+import bugbusters.modelo.Pedido;
 
+import java.time.LocalDateTime;
 import java.util.List;
+import java.util.stream.Collectors;
+
 
 /*
  * Clase Controlador
@@ -105,6 +113,92 @@ public class Controlador {
         return datos.obtenerTodosArticulos();
     }
 
+    /* =========================================================
+       =================== GESTIÓN DE PEDIDOS ==================
+       ========== BLOQUE PARA NUEVA FUNCIONALIDAD =============
+       ========================================================= */
+
+    /**
+     * Añade un pedido.
+     * Devuelve el pedido creado si se añadió correctamente,
+     * o null si no se pudo crear (por ejemplo, artículo inexistente).
+     */
+    public Pedido anadirPedido(String emailCliente, String nombreCliente, boolean esPremium,
+                               String codigoArticulo, int cantidad, String domicilio, String nif) {
+
+        // Buscar cliente
+        Cliente cliente = datos.buscarCliente(emailCliente);
+
+        // Crear cliente si no existe
+        if (cliente == null) {
+            if (esPremium) {
+                cliente = new ClientePremium(emailCliente, nombreCliente, domicilio, nif);
+            } else {
+                cliente = new ClienteEstandar(emailCliente, nombreCliente, domicilio, nif);
+            }
+            datos.anadirCliente(cliente);
+        }
+
+        // Buscar artículo
+        Articulo articulo = datos.buscarArticulo(codigoArticulo);
+        if (articulo == null) {
+            return null; // artículo inexistente
+        }
+
+        // Crear pedido
+        int numeroPedido = datos.generarNumeroPedido();
+        Pedido pedido = new Pedido(numeroPedido, cliente, articulo, cantidad, LocalDateTime.now());
+
+        // Añadir pedido
+        datos.anadirPedido(pedido);
+
+        return pedido;
+    }
+
+    /**
+     * Elimina un pedido.
+     * Devuelve:
+     * - true si se eliminó correctamente
+     * - false si no existe o no se puede eliminar
+     */
+    public boolean eliminarPedido(int numeroPedido) {
+        Pedido pedido = datos.buscarPedido(numeroPedido);
+        if (pedido == null) return false;
+        if (!pedido.puedeCancelar()) return false;
+
+        datos.eliminarPedido(pedido);
+        return true;
+    }
+
+    /**
+     * Obtiene los pedidos pendientes.
+     * Si emailCliente no es null ni vacío, filtra por email.
+     */
+    public List<Pedido> obtenerPedidosPendientes(String emailCliente) {
+        List<Pedido> pedidos = datos.getPedidosPendientes();
+
+        if (emailCliente != null && !emailCliente.isEmpty()) {
+            pedidos = pedidos.stream()
+                    .filter(p -> p.getCliente().getEmail().equalsIgnoreCase(emailCliente))
+                    .collect(Collectors.toList());
+        }
+        return pedidos;
+    }
+
+    /**
+     * Obtiene los pedidos enviados.
+     * Si emailCliente no es null ni vacío, filtra por email.
+     */
+    public List<Pedido> obtenerPedidosEnviados(String emailCliente) {
+        List<Pedido> pedidos = datos.getPedidosEnviados();
+
+        if (emailCliente != null && !emailCliente.isEmpty()) {
+            pedidos = pedidos.stream()
+                    .filter(p -> p.getCliente().getEmail().equalsIgnoreCase(emailCliente))
+                    .collect(Collectors.toList());
+        }
+        return pedidos;
+    }
     // ==========================================
     //       GESTIÓN DE CLIENTES
     // ==========================================
@@ -166,5 +260,4 @@ public class Controlador {
     public List<Cliente> obtenerClientesPremium() {
         return datos.obtenerClientesPremium();
     }
-
 }

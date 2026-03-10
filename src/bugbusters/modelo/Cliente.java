@@ -47,4 +47,9 @@ public abstract class Cliente {
 
     public abstract double calcularCuota();
     public abstract double descuentoEnvio();
+
+    // Devuelve true si el cliente es premium
+    public boolean esPremium() {
+        return this instanceof ClientePremium;
+    }
 }

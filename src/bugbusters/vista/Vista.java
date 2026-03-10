@@ -3,6 +3,8 @@ package bugbusters.vista;
 import bugbusters.controlador.Controlador;
 import bugbusters.modelo.Articulo;
 import bugbusters.modelo.Cliente;
+import bugbusters.modelo.Pedido;
+import bugbusters.modelo.ClientePremium;
 
 import java.util.List;
 import java.util.Scanner;
@@ -59,7 +61,7 @@ public class Vista {
                     break;
 
                 case 3:
-                    System.out.println("Gestión de pedidos (pendiente de implementar).");
+                    menuPedidos();
                     break;
 
                 case 0:
@@ -304,8 +306,128 @@ public class Vista {
             System.out.println("\n[ERROR] No existe ningún cliente registrado con el email: " + email);
         }
     }
+    // ==========================================
+    //       MENÚ DE PEDIDOS
+    // ==========================================
 
+    private void menuPedidos() {
+        int opcion;
 
+        do {
+            System.out.println("\n--- GESTIÓN DE PEDIDOS ---");
+            System.out.println("1. Añadir pedido");
+            System.out.println("2. Eliminar pedido");
+            System.out.println("3. Mostrar pedidos pendientes");
+            System.out.println("4. Mostrar pedidos enviados");
+            System.out.println("0. Volver");
+            opcion = leerEntero("Selecciona una opción: ");
+
+            switch (opcion) {
+                case 1:
+                    anadirPedido();
+                    break;
+                case 2:
+                    eliminarPedido();
+                    break;
+                case 3:
+                    mostrarPedidosPendientes();
+                    break;
+                case 4:
+                    mostrarPedidosEnviados();
+                    break;
+                case 0:
+                    break;
+                default:
+                    System.out.println("Opción no válida.");
+            }
+
+        } while (opcion != 0);
+    }
+
+    private void anadirPedido() {
+        System.out.println("\nAñadir pedido");
+
+        // Email del cliente
+        String emailCliente = leerTexto("Email del cliente: ");
+
+        // Comprobar si el cliente existe
+        Cliente clienteExistente = controlador.buscarCliente(emailCliente);
+
+        String nombreCliente;
+        boolean esPremium;
+        String domicilio;
+        String nif;
+
+        if (clienteExistente == null) {
+            System.out.println("El cliente no existe. Introduce sus datos:");
+
+            nombreCliente = leerTexto("Nombre: ");
+            domicilio = leerTexto("Domicilio: ");
+            nif = leerTexto("NIF: ");
+            esPremium = leerTexto("¿Cliente premium? (s/n): ").equalsIgnoreCase("s");
+        } else {
+            nombreCliente = clienteExistente.getNombre();
+            esPremium = clienteExistente instanceof ClientePremium;
+            domicilio = clienteExistente.getDomicilio();
+            nif = clienteExistente.getNif();
+        }
+
+        // Datos del artículo
+        String codigoArticulo = leerTexto("Código del artículo: ");
+        int cantidad = leerEntero("Cantidad: ");
+
+        // Llamada al controlador
+        Pedido pedido = controlador.anadirPedido(emailCliente, nombreCliente, esPremium,
+                codigoArticulo, cantidad, domicilio, nif);
+
+        if (pedido != null) {
+            if (clienteExistente == null) {
+                System.out.println("[OK] Cliente creado automáticamente: " + nombreCliente);
+            }
+            System.out.println("[OK] Pedido añadido correctamente:");
+            System.out.println(pedido);
+        } else {
+            System.out.println("[ERROR] No se pudo crear el pedido. Artículo inexistente.");
+        }
+    }
+
+    private void eliminarPedido() {
+        System.out.println("\nEliminar pedido");
+        int numeroPedido = leerEntero("Número de pedido: ");
+
+        boolean eliminado = controlador.eliminarPedido(numeroPedido);
+        if (eliminado) {
+            System.out.println("[OK] Pedido eliminado correctamente.");
+        } else {
+            System.out.println("[ERROR] No se pudo eliminar el pedido. Puede que ya haya sido enviado o no exista.");
+        }
+    }
+
+    private void mostrarPedidosPendientes() {
+        System.out.println("\nMostrar pedidos pendientes");
+        String emailFiltro = leerTexto("Filtrar por email del cliente (dejar vacío para todos): ");
+        if(emailFiltro.isEmpty()) emailFiltro = null;
+
+        List<Pedido> pedidos = controlador.obtenerPedidosPendientes(emailFiltro);
+        if (pedidos.isEmpty()) {
+            System.out.println("No hay pedidos pendientes que mostrar.");
+        } else {
+            pedidos.forEach(System.out::println);
+        }
+    }
+
+    private void mostrarPedidosEnviados() {
+        System.out.println("\nMostrar pedidos enviados");
+        String emailFiltro = leerTexto("Filtrar por email del cliente (dejar vacío para todos): ");
+        if(emailFiltro.isEmpty()) emailFiltro = null;
+
+        List<Pedido> pedidos = controlador.obtenerPedidosEnviados(emailFiltro);
+        if (pedidos.isEmpty()) {
+            System.out.println("No hay pedidos enviados que mostrar.");
+        } else {
+            pedidos.forEach(System.out::println);
+        }
+    }
     /* =========================================================
        ================== MÉTODOS AUXILIARES ===================
        ========================================================= */

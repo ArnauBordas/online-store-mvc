@@ -1,20 +1,17 @@
 package bugbusters.modelo;
 
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+
 
 /*
  * Clase Datos
  *
- * Esta clase será la encargada de almacenar los datos principales
- * de la aplicación.
- *
- * En este trabajo grupal, esta clase irá creciendo con las aportaciones
- * de los distintos miembros del equipo.
- *
- * =========================================================
  * BLOQUE IMPLEMENTADO POR: Erick Coll Rodríguez
- * PARTE DESARROLLADA: Gestión de artículos
+ * PARTE DESARROLLADA: Gestión de artículos y pedidos
  * =========================================================
  *
  * En esta primera versión se implementa:
@@ -31,28 +28,12 @@ import java.util.List;
  * En el caso de artículos:
  * - clave  -> código del artículo
  * - valor  -> objeto Articulo
- */
+ * Colecciones implementadas:
+ * - artículos
+ * - pedidos
+      ========================================================= */
 public class Datos {
 
-    /**
-     * Declaramos los "almacenes" usando la clase GenericoDAO
-     * La clave será el código del artículo en minúsculas,
-     * para evitar problemas si un usuario introduce el código
-     * con mayúsculas o minúsculas diferentes.
-     *
-     */
-    private GenericoDAO<String, Articulo> articulos;
-
-    //"Almacén" Cliente donde la clave es String (Email)
-    private GenericoDAO<String, Cliente> clientes;
-    public Datos() {
-        // Inicializamos los "almacenes"
-        this.clientes = new GenericoDAO<>();
-        this.articulos = new GenericoDAO<>();
-    }
-    /* =========================================================
-       ================== COLECCIÓN DE ARTÍCULOS ===============
-       ========================================================= */
 
     /*
      * BLOQUE DE ERICK COLL RODRÍGUEZ
@@ -62,8 +43,23 @@ public class Datos {
      * La clave será el código del artículo en minúsculas,
      * para evitar problemas si un usuario introduce el código
      * con mayúsculas o minúsculas diferentes.
+     * para evitar problemas de mayúsculas/minúsculas.
      */
+    private Map<String, Articulo> articulos;
 
+    /* =========================================================
+       =================== COLECCIÓN DE PEDIDOS ===============
+       ========================================================= */
+
+    /*
+     * Lista de todos los pedidos realizados.
+     */
+    private List<Pedido> listaPedidos;
+
+    /*
+     * Último número de pedido generado
+     */
+    private int ultimoNumeroPedido;
 
     /*
      * Constructor
@@ -73,7 +69,15 @@ public class Datos {
      * Más adelante, cuando otros compañeros añadan su parte,
      * aquí también se inicializarán las colecciones de clientes
      * y pedidos.
+     * Inicializa las colecciones vacías.
      */
+    private GenericoDAO<String, Cliente> clientes;
+    public Datos() {
+        articulos = new LinkedHashMap<>();
+        listaPedidos = new ArrayList<>();
+        clientes = new GenericoDAO<>();
+        ultimoNumeroPedido = 0;
+    }
 
     /* =========================================================
        ================= GESTIÓN DE ARTÍCULOS ==================
@@ -101,7 +105,7 @@ public class Datos {
      * se podrá ampliar fácilmente con validaciones o excepciones.
      */
     public void anadirArticulo(Articulo articulo) {
-        articulos.anadir(articulo.getCodigo().toLowerCase(), articulo);
+        articulos.put(articulo.getCodigo().toLowerCase(), articulo);
     }
 
     /*
@@ -120,7 +124,7 @@ public class Datos {
      * sea consistente con la forma en que se guardan los datos.
      */
     public Articulo buscarArticulo(String codigo) {
-        return articulos.buscar(codigo.toLowerCase());
+        return articulos.get(codigo.toLowerCase());
     }
 
     /*
@@ -136,7 +140,7 @@ public class Datos {
      * - false si no existe
      */
     public boolean existeArticulo(String codigo) {
-        return articulos.existe(codigo.toLowerCase());
+        return articulos.containsKey(codigo.toLowerCase());
     }
 
     /*
@@ -151,7 +155,61 @@ public class Datos {
      * para no exponer directamente la estructura interna.
      */
     public List<Articulo> obtenerTodosArticulos() {
-        return articulos.obtenerTodos();
+        return new ArrayList<>(articulos.values());
+    }
+
+    /* =========================================================
+       ================= GESTIÓN DE PEDIDOS ===================
+       ========================================================= */
+
+    /*
+     * Genera un número de pedido único incremental
+     */
+    public int generarNumeroPedido() {
+        ultimoNumeroPedido++;
+        return ultimoNumeroPedido;
+    }
+
+    /*
+     * Añade un pedido a la lista de pedidos.
+     */
+    public void anadirPedido(Pedido pedido) {
+        listaPedidos.add(pedido);
+    }
+
+    /*
+     * Elimina un pedido de la lista
+     */
+    public void eliminarPedido(Pedido pedido) {
+        listaPedidos.remove(pedido);
+    }
+
+    /*
+     * Busca un pedido por número
+     */
+    public Pedido buscarPedido(int numeroPedido) {
+        for (Pedido p : listaPedidos) {
+            if (p.getNumeroPedido() == numeroPedido) return p;
+        }
+        return null;
+    }
+
+    /*
+     * Devuelve la lista de pedidos pendientes (no enviados)
+     */
+    public List<Pedido> getPedidosPendientes() {
+        return listaPedidos.stream()
+                .filter(Pedido::puedeCancelar)
+                .collect(Collectors.toList());
+    }
+
+    /*
+     * Devuelve la lista de pedidos enviados
+     */
+    public List<Pedido> getPedidosEnviados() {
+        return listaPedidos.stream()
+                .filter(p -> !p.puedeCancelar())
+                .collect(Collectors.toList());
     }
 
     // ==========================================
