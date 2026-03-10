@@ -1,6 +1,7 @@
 package bugbusters.modelo;
 
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 
 public class Pedido {
 
@@ -66,14 +67,14 @@ public class Pedido {
 
     @Override
     public String toString() {
-        return "Pedido{" +
-                "numeroPedido=" + numeroPedido +
-                ", cliente=" + cliente.getNombre() +
-                ", articulo=" + articulo.getDescripcion() +
-                ", cantidad=" + cantidad +
-                ", fechaHora=" + fechaHora +
-                ", total=" + calcularTotal() +
-                ", puedeCancelar=" + puedeCancelar() +
-                '}';
+        DateTimeFormatter formato = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
+        return "Pedido: " +
+                "Número: " + numeroPedido +
+                " | Cliente: " + cliente.getNombre() +
+                " | Artículo: " + articulo.getDescripcion() +
+                " | Cantidad: " + cantidad +
+                " | Fecha y hora: " + fechaHora.format(formato) +
+                " | Total: " + String.format("%.2f €", calcularTotal()) +
+                " | Puede cancelar: " + (puedeCancelar() ? "Sí" : "No");
     }
 }

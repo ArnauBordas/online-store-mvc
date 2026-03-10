@@ -17,14 +17,12 @@ public class ClienteEstandar extends Cliente{
 
     @Override
     public String toString() {
-        return "ClienteEstandar{"+
-                "Email='" + getEmail() + '\'' +
-                ", Nombre='" + getNombre() + '\'' +
-                ", Domicilio=" + getDomicilio() +
-                ", NIF=" + getNif() +
-                ", Cuota=" + calcularCuota() +
-                ", Descuento=" + descuentoEnvio() +
-                '}';
+        return "[Cliente Estandar] "+
+                "Email: " + getEmail() +
+                " | Nombre: " + getNombre() +
+                " | Domicilio: " + getDomicilio() +
+                " | NIF: " + getNif() +
+                " | Cuota: " + String.format("%.2f €", calcularCuota()) +
+                " | Descuento: " + (descuentoEnvio() * 100) + "%";
     }
-
 }
