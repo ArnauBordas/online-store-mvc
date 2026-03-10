@@ -22,14 +22,12 @@ Si en algún momento se quiere cambiar la cantidad, debermos editar el valor de 
 
     @Override
     public String toString() {
-        return "ClientePremium{"+
-                "Email='" + getEmail() + '\'' +
-                ", Nombre='" + getNombre() + '\'' +
-                ", Domicilio=" + getDomicilio() +
-                ", NIF=" + getNif() +
-                ", Cuota=" + calcularCuota() +
-                ", Descuento=" + descuentoEnvio() +
-                '}';
+        return "[Cliente Premium] "+
+                "Email: " + getEmail() +
+                " | Nombre: " + getNombre() +
+                " | Domicilio: " + getDomicilio() +
+                " | NIF: " + getNif() +
+                " | Cuota: " + String.format("%.2f €", calcularCuota()) +
+                " | Descuento: " + (descuentoEnvio() * 100) + "%";
     }
-
 }
