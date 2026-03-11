@@ -240,17 +240,13 @@ public class Vista {
     private void buscarCliente(){
         String email = leerTexto("Introduce el Email del cliente: ");
 
-        // Llamamos al controlador, que nos devuelve el objeto Cliente o null
-        Cliente clienteEncontrado = controlador.buscarCliente(email);
-
-        if (clienteEncontrado != null) {
+        try {
+            Cliente clienteEncontrado = controlador.buscarCliente(email);
             System.out.println("\n[Datos del Cliente]");
-            // Al imprimir el objeto, Java llama automáticamente al toString()
             System.out.println(clienteEncontrado);
-        } else {
-            System.out.println("\n[ERROR] No existe ningún cliente registrado con el email: " + email);
+        } catch (RecursoNoEncontradoException e) {
+            System.out.println(e.getMessage());
         }
-
     }
 
     private void obtenerTodosClientes(){
@@ -272,22 +268,21 @@ public class Vista {
 
 
     private void eliminarCliente(){
-        System.out.println("\nEiminar Cliente");
+        System.out.println("\nEliminar Cliente");
         String email = leerTexto("Introduce el Email del cliente: ");
 
-        // Buscamos si existe para tener sus datos
-        Cliente aEliminar = controlador.buscarCliente(email);
+        try {
+            // Primero obtenemos sus datos para mostrarlos después (opcional)
+            Cliente aEliminar = controlador.buscarCliente(email);
 
-        if (aEliminar != null) {
-            // Si existe, lo borramos
-            boolean eliminado = controlador.eliminarCliente(email);
+            // Luego lo eliminamos
+            controlador.eliminarCliente(email);
 
-            if (eliminado) {
-                System.out.println("\n[INFO] Cliente eliminado con éxito:");
-                System.out.println(aEliminar);
-            }
-        } else {
-            System.out.println("\n[ERROR] No existe ningún cliente registrado con el email: " + email);
+            System.out.println("\n[INFO] Cliente eliminado con éxito:");
+            System.out.println(aEliminar);
+
+        } catch (RecursoNoEncontradoException e) {
+            System.out.println(e.getMessage());
         }
     }
     // ==========================================
@@ -336,10 +331,13 @@ public class Vista {
 
         // 1. Pedimos email del cliente
         String emailCliente = leerTexto("Email del cliente: ");
-        Cliente cliente = controlador.buscarCliente(emailCliente);
+        Cliente cliente = null;
 
-        // 2. Si el cliente no existe, lo creamos inmediatamente
-        if (cliente == null) {
+        // 2. Intentamos buscar el cliente (ahora lanza excepción)
+        try {
+            cliente = controlador.buscarCliente(emailCliente);
+        } catch (RecursoNoEncontradoException e) {
+            // Cliente no existe, lo creamos automáticamente
             System.out.println("[INFO] Cliente no existe. Se creará automáticamente.");
 
             String nombre = leerTexto("Nombre: ");
@@ -353,24 +351,31 @@ public class Vista {
                 return;
             }
 
-            cliente = controlador.buscarCliente(emailCliente); // Actualizamos referencia
-            System.out.println("[INFO] Cliente creado correctamente. Continuamos con la creación del pedido.\n");
+            // Recuperamos el cliente recién creado
+            try {
+                cliente = controlador.buscarCliente(emailCliente);
+                System.out.println("[INFO] Cliente creado correctamente. Continuamos con la creación del pedido.\n");
+            } catch (RecursoNoEncontradoException ex) {
+                System.out.println("[ERROR] Error inesperado al recuperar el cliente creado.");
+                return;
+            }
         }
 
+        // 3. Procedemos con la creación del pedido
         try {
-            // 3. Pedimos código del artículo
+            // Pedimos código del artículo
             String codigoArticulo = leerTexto("Código del artículo: ");
 
-            // 4. Verificamos que el artículo exista; si no, lanza excepción
+            // Verificamos que el artículo exista
             Articulo articulo = controlador.buscarArticulo(codigoArticulo);
             if (articulo == null) {
                 throw new RecursoNoEncontradoException("Artículo", codigoArticulo);
             }
 
-            // 5. Pedimos cantidad
+            // Pedimos cantidad
             int cantidad = leerEntero("Cantidad: ");
 
-            // 6. Creamos el pedido
+            // Creamos el pedido
             Pedido pedido = controlador.anadirPedido(emailCliente, codigoArticulo, cantidad);
             System.out.println("\n[INFO] Pedido creado correctamente:");
             System.out.println(pedido);

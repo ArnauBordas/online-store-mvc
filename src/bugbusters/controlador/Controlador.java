@@ -236,7 +236,13 @@ public class Controlador {
      * eliminarCliente()
      * Solicita al modelo la eliminar un cliente por email.
      */
-    public boolean eliminarCliente(String email) {
+    public boolean eliminarCliente(String email) throws RecursoNoEncontradoException {
+        //Comprobamos que existe
+        Cliente cliente = datos.buscarCliente(email);
+        if (cliente == null) {
+            throw new RecursoNoEncontradoException("Cliente", email);
+        }
+        // Si existe lo eliminamos
         return datos.eliminarCliente(email);
     }
 
@@ -244,8 +250,12 @@ public class Controlador {
      * buscarCliente()
      * Devuelve el objeto cliente buscado per email.
      */
-    public Cliente buscarCliente(String email) {
-        return datos.buscarCliente(email);
+    public Cliente buscarCliente(String email) throws RecursoNoEncontradoException {
+        Cliente cliente = datos.buscarCliente(email);
+        if (cliente == null) {
+            throw new RecursoNoEncontradoException("Cliente", email);
+        }
+        return cliente;
     }
 
     /**
