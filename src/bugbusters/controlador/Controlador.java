@@ -7,7 +7,7 @@ import bugbusters.modelo.ClientePremium;
 import bugbusters.modelo.Datos;
 import bugbusters.modelo.Pedido;
 import bugbusters.modelo.excepciones.RecursoNoEncontradoException;
-import bugbusters.modelo.excepciones.ClienteYaExisteException;
+import bugbusters.modelo.excepciones.YaExisteException;
 import bugbusters.modelo.excepciones.TipoClienteInvalidoException;
 import bugbusters.modelo.excepciones.PedidoNoCancelableException;
 import java.time.LocalDateTime;
@@ -70,10 +70,9 @@ public class Controlador {
      * - tiempoPreparacionMin
      */
     public void anadirArticulo(String codigo, String descripcion, double precioVenta,
-                               double gastosEnvio, int tiempoPreparacionMin) {
-
+                               double gastosEnvio, int tiempoPreparacionMin) throws YaExisteException {
         Articulo articulo = new Articulo(codigo, descripcion, precioVenta, gastosEnvio, tiempoPreparacionMin);
-        datos.anadirArticulo(articulo);
+        datos.anadirArticulo(articulo);  // Esta línea puede lanzar YaExisteException
     }
 
     /*
@@ -88,8 +87,12 @@ public class Controlador {
      * - el objeto Articulo si existe
      * - null si no existe
      */
-    public Articulo buscarArticulo(String codigo) {
-        return datos.buscarArticulo(codigo);
+    public Articulo buscarArticulo(String codigo) throws RecursoNoEncontradoException {
+        Articulo articulo = datos.buscarArticulo(codigo);
+        if (articulo == null) {
+            throw new RecursoNoEncontradoException("Artículo", codigo);
+        }
+        return articulo;
     }
 
     /*
@@ -168,14 +171,13 @@ public class Controlador {
      * Elimina un pedido.
      * Lanza RecursoNoEncontradoException si no existe el pedido.
      */
-    public void eliminarPedido(int numeroPedido) throws RecursoNoEncontradoException {
+    public void eliminarPedido(int numeroPedido) throws RecursoNoEncontradoException, PedidoNoCancelableException {
         Pedido pedido = datos.buscarPedido(numeroPedido);
         if (pedido == null) {
             throw new RecursoNoEncontradoException("Pedido", String.valueOf(numeroPedido));
         }
         if (!pedido.puedeCancelar()) {
-            // Si no se puede cancelar, dejamos que siga devolviendo false o podemos crear otra excepción específica
-            throw new IllegalStateException("El pedido no puede ser cancelado porque ya ha sido enviado.");
+            throw new PedidoNoCancelableException(numeroPedido);
         }
 
         datos.eliminarPedido(pedido);
@@ -218,16 +220,17 @@ public class Controlador {
      * añadirCliente()
      * Crea el objeto específico según el tipo y lo guarda en el modelo.
      */
-    public boolean anadirCliente(String email, String nombre, String domicilio, String nif,  int tipoCliente) {
+    public boolean anadirCliente(String email, String nombre, String domicilio, String nif, int tipoCliente)
+            throws TipoClienteInvalidoException, YaExisteException {
         Cliente nuevoCliente;
 
-        // Aquí es donde decidimos qué "forma" toma el objeto
         if (tipoCliente == 1) {
             nuevoCliente = new ClienteEstandar(email, nombre, domicilio, nif);
         } else if (tipoCliente == 2) {
             nuevoCliente = new ClientePremium(email, nombre, domicilio, nif);
-        } else
-            return false;
+        } else {
+            throw new TipoClienteInvalidoException(tipoCliente);
+        }
 
         return datos.anadirCliente(nuevoCliente);
     }
@@ -236,7 +239,13 @@ public class Controlador {
      * eliminarCliente()
      * Solicita al modelo la eliminar un cliente por email.
      */
-    public boolean eliminarCliente(String email) {
+    public boolean eliminarCliente(String email) throws RecursoNoEncontradoException {
+        //Comprobamos que existe
+        Cliente cliente = datos.buscarCliente(email);
+        if (cliente == null) {
+            throw new RecursoNoEncontradoException("Cliente", email);
+        }
+        // Si existe lo eliminamos
         return datos.eliminarCliente(email);
     }
 
@@ -244,8 +253,12 @@ public class Controlador {
      * buscarCliente()
      * Devuelve el objeto cliente buscado per email.
      */
-    public Cliente buscarCliente(String email) {
-        return datos.buscarCliente(email);
+    public Cliente buscarCliente(String email) throws RecursoNoEncontradoException {
+        Cliente cliente = datos.buscarCliente(email);
+        if (cliente == null) {
+            throw new RecursoNoEncontradoException("Cliente", email);
+        }
+        return cliente;
     }
 
     /**

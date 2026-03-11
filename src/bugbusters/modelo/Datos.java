@@ -1,5 +1,7 @@
 package bugbusters.modelo;
 
+import bugbusters.modelo.excepciones.YaExisteException;
+
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -104,8 +106,14 @@ public class Datos {
      * Si más adelante el grupo decide evitar duplicados,
      * se podrá ampliar fácilmente con validaciones o excepciones.
      */
-    public void anadirArticulo(Articulo articulo) {
-        articulos.put(articulo.getCodigo().toLowerCase(), articulo);
+    public void anadirArticulo(Articulo articulo) throws YaExisteException {
+        String codigo = articulo.getCodigo().toLowerCase();
+
+        if (articulos.containsKey(codigo)) {  // Comprueba si ya existe
+            throw new YaExisteException("artículo", articulo.getCodigo());  // Lanza excepción
+        }
+
+        articulos.put(codigo, articulo);
     }
 
     /*
@@ -219,13 +227,11 @@ public class Datos {
     /**
      * Añadir con validación de clave única (email).
      */
-    public boolean anadirCliente(Cliente cliente) {
+    public boolean anadirCliente(Cliente cliente) throws YaExisteException {
         String email = cliente.getEmail();
-
         if (clientes.existe(email)) {
-            return false; // El email ya existe, no se añade.
+            throw new YaExisteException("un cliente", email);  // ← EXCEPCIÓN GENÉRICA
         }
-
         clientes.anadir(email, cliente);
         return true;
     }
