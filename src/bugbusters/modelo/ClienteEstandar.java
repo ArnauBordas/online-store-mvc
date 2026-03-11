@@ -21,8 +21,6 @@ public class ClienteEstandar extends Cliente{
                 "Email: " + getEmail() +
                 " | Nombre: " + getNombre() +
                 " | Domicilio: " + getDomicilio() +
-                " | NIF: " + getNif() +
-                " | Cuota: " + String.format("%.2f €", calcularCuota()) +
-                " | Descuento: " + (descuentoEnvio() * 100) + "%";
+                " | NIF: " + getNif();
     }
 }

@@ -4,7 +4,6 @@ import bugbusters.controlador.Controlador;
 import bugbusters.modelo.Articulo;
 import bugbusters.modelo.Cliente;
 import bugbusters.modelo.Pedido;
-import bugbusters.modelo.ClientePremium;
 
 import java.util.List;
 import java.util.Scanner;
@@ -247,45 +246,21 @@ public class Vista {
 
     private void obtenerTodosClientes(){
         System.out.println("\nListado de Clientes:");
-
-        List<Cliente> clientes = controlador.obtenerTodosClientes();
-
-        if (clientes.isEmpty()) {
-            System.out.println("No hay clientes registrados.");
-        } else {
-            for (Cliente c : clientes) {
-                System.out.println(c);
-            }
-        }
+        imprimirClientes("No hay clientes registrados.", controlador.obtenerTodosClientes());
     }
+
 
     private void obtenerClientesEstandar(){
         System.out.println("\nListado de Clientes Estándar:");
-
-        List<Cliente> clientes = controlador.obtenerClientesEstandar();
-
-        if (clientes.isEmpty()) {
-            System.out.println("No hay clientes estándar registrados.");
-        } else {
-            for (Cliente c : clientes) {
-                System.out.println(c);
-            }
-        }
-
+        imprimirClientes("No hay clientes estándar registrados.", controlador.obtenerClientesEstandar());
     }
+
 
     private void obtenerClientesPremium(){
         System.out.println("\nListado de Clientes Premium:");
-        List<Cliente> clientes = controlador.obtenerClientesPremium();
-
-        if (clientes.isEmpty()) {
-            System.out.println("No hay clientes premium registrados.");
-        } else {
-            for (Cliente c : clientes) {
-                System.out.println(c);
-            }
-        }
+        imprimirClientes("No hay clientes premium registrados.", controlador.obtenerClientesPremium());
     }
+
 
     private void eliminarCliente(){
         System.out.println("\nEiminar Cliente");
@@ -367,7 +342,7 @@ public class Vista {
             esPremium = leerTexto("¿Cliente premium? (s/n): ").equalsIgnoreCase("s");
         } else {
             nombreCliente = clienteExistente.getNombre();
-            esPremium = clienteExistente instanceof ClientePremium;
+            esPremium = clienteExistente.esPremium();
             domicilio = clienteExistente.getDomicilio();
             nif = clienteExistente.getNif();
         }
@@ -461,4 +436,19 @@ public class Vista {
         System.out.print(mensaje);
         return Double.parseDouble(teclado.nextLine());
     }
+
+    /*
+     * imprimirClientes()
+     * Metodo para imprimir clientes manteniendo el mensaje personalizado pero simplificando codigo
+     */
+    private void imprimirClientes(String mensajePersonalizado, List<Cliente> clientes) {
+        if (clientes.isEmpty()) {
+            System.out.println(mensajePersonalizado);
+        } else {
+            for (Cliente c : clientes) {
+                System.out.println(c);
+            }
+        }
+    }
+
 }
