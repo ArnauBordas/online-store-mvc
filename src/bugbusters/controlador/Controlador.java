@@ -6,10 +6,14 @@ import bugbusters.modelo.ClienteEstandar;
 import bugbusters.modelo.ClientePremium;
 import bugbusters.modelo.Datos;
 import bugbusters.modelo.Pedido;
-
+import bugbusters.modelo.excepciones.RecursoNoEncontradoException;
+import bugbusters.modelo.excepciones.ClienteYaExisteException;
+import bugbusters.modelo.excepciones.TipoClienteInvalidoException;
+import bugbusters.modelo.excepciones.PedidoNoCancelableException;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
+
 
 
 /*
@@ -123,33 +127,32 @@ public class Controlador {
      * Devuelve el pedido creado si se añadió correctamente,
      * o null si no se pudo crear (por ejemplo, artículo inexistente).
      */
-    public Pedido anadirPedido(String emailCliente, String nombreCliente, boolean esPremium,
-                               String codigoArticulo, int cantidad, String domicilio, String nif) {
+    /**
+     * Añade un pedido.
+     * Devuelve:
+     * - el pedido creado si se pudo crear correctamente
+     * - null si el cliente o el artículo no existen
+     */
+    public Pedido anadirPedido(String emailCliente, String codigoArticulo, int cantidad)
+            throws RecursoNoEncontradoException {
 
         // Buscar cliente
         Cliente cliente = datos.buscarCliente(emailCliente);
-
-        // Crear cliente si no existe
         if (cliente == null) {
-            if (esPremium) {
-                cliente = new ClientePremium(emailCliente, nombreCliente, domicilio, nif);
-            } else {
-                cliente = new ClienteEstandar(emailCliente, nombreCliente, domicilio, nif);
-            }
-            datos.anadirCliente(cliente);
+            throw new RecursoNoEncontradoException("Cliente", emailCliente);
         }
 
         // Buscar artículo
         Articulo articulo = datos.buscarArticulo(codigoArticulo);
         if (articulo == null) {
-            return null; // artículo inexistente
+            throw new RecursoNoEncontradoException("Artículo", codigoArticulo);
         }
 
         // Crear pedido
         int numeroPedido = datos.generarNumeroPedido();
         Pedido pedido = new Pedido(numeroPedido, cliente, articulo, cantidad, LocalDateTime.now());
 
-        // Añadir pedido
+        // Guardar pedido
         datos.anadirPedido(pedido);
 
         return pedido;
