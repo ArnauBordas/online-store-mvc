@@ -5,6 +5,11 @@ import bugbusters.modelo.Articulo;
 import bugbusters.modelo.Cliente;
 import bugbusters.modelo.Pedido;
 
+import bugbusters.modelo.excepciones.RecursoNoEncontradoException;
+import bugbusters.modelo.excepciones.ClienteYaExisteException;
+import bugbusters.modelo.excepciones.TipoClienteInvalidoException;
+import bugbusters.modelo.excepciones.PedidoNoCancelableException;
+
 import java.util.List;
 import java.util.Scanner;
 
@@ -48,7 +53,7 @@ public class Vista {
 
         do {
             mostrarMenuPrincipal();
-            opcion = leerEntero("Selecciona una opción: ");
+            opcion = leerEntero("> Selecciona una opción: ");
 
             switch (opcion) {
                 case 1:
@@ -98,11 +103,14 @@ public class Vista {
         int opcion;
 
         do {
-            System.out.println("\n--- GESTIÓN DE ARTÍCULOS ---");
+            System.out.println("\n------------------------------");
+            System.out.println("     GESTIÓN DE ARTÍCULOS     ");
+            System.out.println("------------------------------");
             System.out.println("1. Añadir artículo");
             System.out.println("2. Mostrar artículos");
             System.out.println("0. Volver");
-            opcion = leerEntero("Selecciona una opción: ");
+            System.out.println("------------------------------");
+            opcion = leerEntero("> Selecciona una opción: ");
 
             switch (opcion) {
                 case 1:
@@ -125,19 +133,17 @@ public class Vista {
      * Pide datos por teclado, crea el artículo desde el controlador y lo guarda.
      */
     private void anadirArticulo() {
-        System.out.println("\nAñadir artículo");
-
+        System.out.println("\n--- Añadir artículo ---");
         String codigo = leerTexto("Código: ");
         String descripcion = leerTexto("Descripción: ");
         double precioVenta = leerDouble("Precio de venta: ");
         double gastosEnvio = leerDouble("Gastos de envío: ");
         int tiempoPreparacionMin = leerEntero("Tiempo de preparación (minutos): ");
 
-        // Opción simple: permitir sobrescribir si ya existe (como está en Datos)
-        // Si luego queréis evitar repetidos, se mejora con validación/excepciones.
+
         controlador.anadirArticulo(codigo, descripcion, precioVenta, gastosEnvio, tiempoPreparacionMin);
 
-        System.out.println("Artículo añadido correctamente.");
+        System.out.println("\n[INFO] Artículo añadido correctamente.");
     }
 
     /*
@@ -165,7 +171,9 @@ public class Vista {
         int opcion;
 
         do {
-            System.out.println("\n--- GESTIÓN DE CLIENTES ---");
+            System.out.println("\n------------------------------");
+            System.out.println("      GESTIÓN DE CLIENTES     ");
+            System.out.println("------------------------------");
             System.out.println("1. Añadir cliente");
             System.out.println("2. Buscar cliente");
             System.out.println("3. Mostrar todos los clientes");
@@ -173,7 +181,8 @@ public class Vista {
             System.out.println("5. Mostrar clientes premium");
             System.out.println("6. Eliminar cliente");
             System.out.println("0. Volver");
-            opcion = leerEntero("Selecciona una opción: ");
+            System.out.println("------------------------------");
+            opcion = leerEntero("> Selecciona una opción: ");
 
             switch (opcion) {
                 case 1:
@@ -208,7 +217,7 @@ public class Vista {
      * Pide datos por teclado, crea el artículo desde el controlador y lo guarda.
      */
     private void anadirCliente() {
-        System.out.println("\nAñadir Cliente");
+        System.out.println("\n--- Añadir Cliente ---");
 
         String email = leerTexto("Email: ");
         String nombre = leerTexto("Nombre: ");
@@ -221,7 +230,7 @@ public class Vista {
 
         // Mostramos el mensaje adecuado según lo que pasó en el Controlador/Modelo
         if (resultado) {
-            System.out.println("\n[OK] Cliente añadido correctamente.");
+            System.out.println("\n[INFO] Cliente añadido correctamente.");
         } else {
             System.out.println("\n[ERROR] No se pudo añadir el cliente.");
             System.out.println("Causa posible: Tipo de cliente no válido o el Email ya está registrado.");
@@ -274,7 +283,7 @@ public class Vista {
             boolean eliminado = controlador.eliminarCliente(email);
 
             if (eliminado) {
-                System.out.println("\n[OK] Cliente eliminado con éxito:");
+                System.out.println("\n[INFO] Cliente eliminado con éxito:");
                 System.out.println(aEliminar);
             }
         } else {
@@ -289,13 +298,16 @@ public class Vista {
         int opcion;
 
         do {
-            System.out.println("\n--- GESTIÓN DE PEDIDOS ---");
+            System.out.println("\n------------------------------");
+            System.out.println("      GESTIÓN DE PEDIDOS      ");
+            System.out.println("------------------------------");
             System.out.println("1. Añadir pedido");
             System.out.println("2. Eliminar pedido");
             System.out.println("3. Mostrar pedidos pendientes");
             System.out.println("4. Mostrar pedidos enviados");
             System.out.println("0. Volver");
-            opcion = leerEntero("Selecciona una opción: ");
+            System.out.println("------------------------------");
+            opcion = leerEntero("> Selecciona una opción: ");
 
             switch (opcion) {
                 case 1:
@@ -320,49 +332,51 @@ public class Vista {
     }
 
     private void anadirPedido() {
-        System.out.println("\nAñadir pedido");
+        System.out.println("\n--- Añadir pedido ---");
 
-        // Email del cliente
+        // 1. Pedimos email del cliente
         String emailCliente = leerTexto("Email del cliente: ");
+        Cliente cliente = controlador.buscarCliente(emailCliente);
 
-        // Comprobar si el cliente existe
-        Cliente clienteExistente = controlador.buscarCliente(emailCliente);
+        // 2. Si el cliente no existe, lo creamos inmediatamente
+        if (cliente == null) {
+            System.out.println("[INFO] Cliente no existe. Se creará automáticamente.");
 
-        String nombreCliente;
-        boolean esPremium;
-        String domicilio;
-        String nif;
+            String nombre = leerTexto("Nombre: ");
+            String domicilio = leerTexto("Domicilio: ");
+            String nif = leerTexto("NIF: ");
+            int tipo = leerEntero("Tipo cliente (1-Estándar, 2-Premium): ");
 
-        if (clienteExistente == null) {
-            System.out.println("El cliente no existe. Introduce sus datos:");
+            boolean creado = controlador.anadirCliente(emailCliente, nombre, domicilio, nif, tipo);
+            if (!creado) {
+                System.out.println("[ERROR] No se pudo crear el cliente. Pedido cancelado.");
+                return;
+            }
 
-            nombreCliente = leerTexto("Nombre: ");
-            domicilio = leerTexto("Domicilio: ");
-            nif = leerTexto("NIF: ");
-            esPremium = leerTexto("¿Cliente premium? (s/n): ").equalsIgnoreCase("s");
-        } else {
-            nombreCliente = clienteExistente.getNombre();
-            esPremium = clienteExistente.esPremium();
-            domicilio = clienteExistente.getDomicilio();
-            nif = clienteExistente.getNif();
+            cliente = controlador.buscarCliente(emailCliente); // Actualizamos referencia
+            System.out.println("[INFO] Cliente creado correctamente. Continuamos con la creación del pedido.\n");
         }
 
-        // Datos del artículo
-        String codigoArticulo = leerTexto("Código del artículo: ");
-        int cantidad = leerEntero("Cantidad: ");
+        try {
+            // 3. Pedimos código del artículo
+            String codigoArticulo = leerTexto("Código del artículo: ");
 
-        // Llamada al controlador
-        Pedido pedido = controlador.anadirPedido(emailCliente, nombreCliente, esPremium,
-                codigoArticulo, cantidad, domicilio, nif);
-
-        if (pedido != null) {
-            if (clienteExistente == null) {
-                System.out.println("[OK] Cliente creado automáticamente: " + nombreCliente);
+            // 4. Verificamos que el artículo exista; si no, lanza excepción
+            Articulo articulo = controlador.buscarArticulo(codigoArticulo);
+            if (articulo == null) {
+                throw new RecursoNoEncontradoException("Artículo", codigoArticulo);
             }
-            System.out.println("[OK] Pedido añadido correctamente:");
+
+            // 5. Pedimos cantidad
+            int cantidad = leerEntero("Cantidad: ");
+
+            // 6. Creamos el pedido
+            Pedido pedido = controlador.anadirPedido(emailCliente, codigoArticulo, cantidad);
+            System.out.println("\n[INFO] Pedido creado correctamente:");
             System.out.println(pedido);
-        } else {
-            System.out.println("[ERROR] No se pudo crear el pedido. Artículo inexistente.");
+
+        } catch (RecursoNoEncontradoException e) {
+            System.out.println(e.getMessage());
         }
     }
 
@@ -370,11 +384,13 @@ public class Vista {
         System.out.println("\nEliminar pedido");
         int numeroPedido = leerEntero("Número de pedido: ");
 
-        boolean eliminado = controlador.eliminarPedido(numeroPedido);
-        if (eliminado) {
-            System.out.println("[OK] Pedido eliminado correctamente.");
-        } else {
-            System.out.println("[ERROR] No se pudo eliminar el pedido. Puede que ya haya sido enviado o no exista.");
+        try {
+            controlador.eliminarPedido(numeroPedido);
+            System.out.println("\n[OK] Pedido eliminado correctamente.");
+        } catch (RecursoNoEncontradoException e) {
+            System.out.println(e.getMessage());
+        } catch (IllegalStateException e) {
+            System.out.println("[ERROR] " + e.getMessage());
         }
     }
 
