@@ -422,10 +422,8 @@ public class Vista {
         try {
             controlador.eliminarPedido(numeroPedido);
             System.out.println("\n[OK] Pedido eliminado correctamente.");
-        } catch (RecursoNoEncontradoException e) {
+        } catch (RecursoNoEncontradoException | PedidoNoCancelableException e) {
             System.out.println(e.getMessage());
-        } catch (IllegalStateException e) {
-            System.out.println("[ERROR] " + e.getMessage());
         }
     }
 
