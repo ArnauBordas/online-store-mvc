@@ -5,10 +5,7 @@ import bugbusters.modelo.Articulo;
 import bugbusters.modelo.Cliente;
 import bugbusters.modelo.Pedido;
 
-import bugbusters.modelo.excepciones.RecursoNoEncontradoException;
-import bugbusters.modelo.excepciones.YaExisteException;
-import bugbusters.modelo.excepciones.TipoClienteInvalidoException;
-import bugbusters.modelo.excepciones.PedidoNoCancelableException;
+import bugbusters.modelo.excepciones.*;
 
 import java.util.List;
 import java.util.Scanner;
@@ -237,10 +234,18 @@ public class Vista {
 
         String email = leerTexto("Email: ");
 
-        // Comprobamos si el email ya existe
+        // PASO 1: Validar formato del email
+        try {
+            validarEmail(email);
+        } catch (EmailInvalidoException e) {
+            System.out.println(e.getMessage());
+            return;  // Salimos si el email no es válido
+        }
+
+        // PASO 2: Comprobamos si el email ya existe
         try {
             controlador.buscarCliente(email);  // Si existe, NO lanza excepción
-            // Si llegamos aquí, el cliente SÍ existe y lanza la excepción
+            // Si llegamos aquí, el cliente SÍ existe
             throw new YaExisteException("cliente", email);
 
         } catch (RecursoNoEncontradoException e) {
@@ -260,7 +265,7 @@ public class Vista {
             }
 
         } catch (YaExisteException e) {
-            System.out.println(e.getMessage());  // Se imprime el mensaje de la excepción
+            System.out.println(e.getMessage());
         }
     }
 
@@ -497,6 +502,14 @@ public class Vista {
             for (Cliente c : clientes) {
                 System.out.println(c);
             }
+        }
+    }
+
+    // Método auxiliar para validar email
+    private void validarEmail(String email) throws EmailInvalidoException {
+        String regex = "^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$";
+        if (email == null || !email.matches(regex)) {
+            throw new EmailInvalidoException(email);
         }
     }
 
