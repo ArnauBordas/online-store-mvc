@@ -6,7 +6,7 @@ import bugbusters.modelo.Cliente;
 import bugbusters.modelo.Pedido;
 
 import bugbusters.modelo.excepciones.RecursoNoEncontradoException;
-import bugbusters.modelo.excepciones.ClienteYaExisteException;
+import bugbusters.modelo.excepciones.YaExisteException;
 import bugbusters.modelo.excepciones.TipoClienteInvalidoException;
 import bugbusters.modelo.excepciones.PedidoNoCancelableException;
 
@@ -135,15 +135,31 @@ public class Vista {
     private void anadirArticulo() {
         System.out.println("\n--- Añadir artículo ---");
         String codigo = leerTexto("Código: ");
-        String descripcion = leerTexto("Descripción: ");
-        double precioVenta = leerDouble("Precio de venta: ");
-        double gastosEnvio = leerDouble("Gastos de envío: ");
-        int tiempoPreparacionMin = leerEntero("Tiempo de preparación (minutos): ");
 
+        // Primero comprobamos si el código ya existe
+        try {
+            controlador.buscarArticulo(codigo);  // Si existe, NO lanza excepción
+            // Si llegamos aquí, el artículo SÍ existe
+            throw new YaExisteException("artículo", codigo);  // Lanzamos excepción
 
-        controlador.anadirArticulo(codigo, descripcion, precioVenta, gastosEnvio, tiempoPreparacionMin);
+        } catch (RecursoNoEncontradoException e) {
+            // El artículo NO existe, podemos pedir el resto de datos
+            String descripcion = leerTexto("Descripción: ");
+            double precioVenta = leerDouble("Precio de venta: ");
+            double gastosEnvio = leerDouble("Gastos de envío: ");
+            int tiempoPreparacionMin = leerEntero("Tiempo de preparación (minutos): ");
 
-        System.out.println("\n[INFO] Artículo añadido correctamente.");
+            try {
+                controlador.anadirArticulo(codigo, descripcion, precioVenta, gastosEnvio, tiempoPreparacionMin);
+                System.out.println("\n[INFO] Artículo añadido correctamente.");
+            } catch (YaExisteException ex) {
+                System.out.println(ex.getMessage());
+            }
+
+        } catch (YaExisteException e) {
+            // Capturamos la excepción que lanzamos si el código ya existe
+            System.out.println(e.getMessage());
+        }
     }
 
     /*
@@ -213,29 +229,38 @@ public class Vista {
     }
 
     /*
-     * anadirArticulo()
-     * Pide datos por teclado, crea el artículo desde el controlador y lo guarda.
+     * anadirCliente()
+     * Pide datos por teclado, crea el cliente desde el controlador y lo guarda.
      */
     private void anadirCliente() {
         System.out.println("\n--- Añadir Cliente ---");
 
         String email = leerTexto("Email: ");
-        String nombre = leerTexto("Nombre: ");
-        String domicilio = leerTexto("Domicilio: ");
-        String nif = leerTexto("NIF: ");
-        int tipoCliente = leerEntero("Tipo de cliente (1- Estándar, 2- Premium): ");
 
+        // Comprobamos si el email ya existe
         try {
-            boolean resultado = controlador.anadirCliente(email, nombre, domicilio, nif, tipoCliente);
+            controlador.buscarCliente(email);  // Si existe, NO lanza excepción
+            // Si llegamos aquí, el cliente SÍ existe y lanza la excepción
+            throw new YaExisteException("cliente", email);
 
-            if (resultado) {
-                System.out.println("\n[INFO] Cliente añadido correctamente.");
-            } else {
-                System.out.println("\n[ERROR] No se pudo añadir el cliente. El email ya existe.");
+        } catch (RecursoNoEncontradoException e) {
+            // Si el cliente NO existe, continuamos
+            String nombre = leerTexto("Nombre: ");
+            String domicilio = leerTexto("Domicilio: ");
+            String nif = leerTexto("NIF: ");
+            int tipoCliente = leerEntero("Tipo de cliente (1- Estándar, 2- Premium): ");
+
+            try {
+                boolean resultado = controlador.anadirCliente(email, nombre, domicilio, nif, tipoCliente);
+                if (resultado) {
+                    System.out.println("\n[INFO] Cliente añadido correctamente.");
+                }
+            } catch (TipoClienteInvalidoException | YaExisteException ex) {
+                System.out.println(ex.getMessage());
             }
 
-        } catch (TipoClienteInvalidoException e) {
-            System.out.println(e.getMessage());
+        } catch (YaExisteException e) {
+            System.out.println(e.getMessage());  // Se imprime el mensaje de la excepción
         }
     }
 
@@ -354,8 +379,8 @@ public class Vista {
                     System.out.println("[ERROR] No se pudo crear el cliente. Pedido cancelado.");
                     return;
                 }
-            } catch (TipoClienteInvalidoException ec) {
-                System.out.println(e.getMessage());
+            } catch (TipoClienteInvalidoException | YaExisteException ex) {
+                System.out.println(ex.getMessage());
                 return;
             }
 

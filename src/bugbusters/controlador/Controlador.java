@@ -7,7 +7,7 @@ import bugbusters.modelo.ClientePremium;
 import bugbusters.modelo.Datos;
 import bugbusters.modelo.Pedido;
 import bugbusters.modelo.excepciones.RecursoNoEncontradoException;
-import bugbusters.modelo.excepciones.ClienteYaExisteException;
+import bugbusters.modelo.excepciones.YaExisteException;
 import bugbusters.modelo.excepciones.TipoClienteInvalidoException;
 import bugbusters.modelo.excepciones.PedidoNoCancelableException;
 import java.time.LocalDateTime;
@@ -70,10 +70,9 @@ public class Controlador {
      * - tiempoPreparacionMin
      */
     public void anadirArticulo(String codigo, String descripcion, double precioVenta,
-                               double gastosEnvio, int tiempoPreparacionMin) {
-
+                               double gastosEnvio, int tiempoPreparacionMin) throws YaExisteException {
         Articulo articulo = new Articulo(codigo, descripcion, precioVenta, gastosEnvio, tiempoPreparacionMin);
-        datos.anadirArticulo(articulo);
+        datos.anadirArticulo(articulo);  // Esta línea puede lanzar YaExisteException
     }
 
     /*
@@ -223,7 +222,7 @@ public class Controlador {
      * Crea el objeto específico según el tipo y lo guarda en el modelo.
      */
     public boolean anadirCliente(String email, String nombre, String domicilio, String nif, int tipoCliente)
-            throws TipoClienteInvalidoException {
+            throws TipoClienteInvalidoException, YaExisteException {
         Cliente nuevoCliente;
 
         if (tipoCliente == 1) {
