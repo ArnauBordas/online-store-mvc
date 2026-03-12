@@ -7,6 +7,7 @@ import bugbusters.controlador.Controlador;
 import bugbusters.modelo.excepciones.RecursoNoEncontradoException;
 import bugbusters.modelo.excepciones.YaExisteException;
 import bugbusters.modelo.excepciones.TipoClienteInvalidoException;
+import bugbusters.modelo.excepciones.EmailInvalidoException; // IMPORTANTE: Añadir esta importación
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.BeforeEach;
@@ -30,24 +31,31 @@ public class PruebasTest {
         // Cliente: Juan Pérez de Barcelona
         cliente = new ClienteEstandar("juan.perez@email.com", "Juan Pérez", "Calle Mayor 123, Barcelona", "12345678A");
 
-        //Si falla, el test falla.
         try {
             controlador.anadirArticulo(articulo.getCodigo(), articulo.getDescripcion(),
                     articulo.getPrecioVenta(), articulo.getGastosEnvio(),
                     articulo.getTiempoPreparacionMin());
+        } catch (YaExisteException e) {
+            fail("Error al añadir artículo en setUp: " + e.getMessage());
+        }
 
+        try {
             controlador.anadirCliente(cliente.getEmail(), cliente.getNombre(),
                     cliente.getDomicilio(), cliente.getNif(), 1);
-        } catch (YaExisteException | TipoClienteInvalidoException e) {
-            fail("Error en setUp: " + e.getMessage());
+        } catch (YaExisteException | TipoClienteInvalidoException | EmailInvalidoException e) {
+            fail("Error al añadir cliente en setUp: " + e.getMessage());
         }
     }
 
     @Test
-    // Se añade la excepción porque este puede lanzarlo (cuando no existe el cliente o el artículo)
-    public void testAnadirPedidoCorrecto() throws RecursoNoEncontradoException {
+    public void testAnadirPedidoCorrecto() {
         // Juan Pérez compra 2 ratones
-        Pedido pedido = controlador.anadirPedido("juan.perez@email.com", "RAT001", 2);
+        Pedido pedido = null;
+        try {
+            pedido = controlador.anadirPedido("juan.perez@email.com", "RAT001", 2);
+        } catch (RecursoNoEncontradoException e) {
+            fail("No debería lanzar excepción: " + e.getMessage());
+        }
 
         assertNotNull(pedido);
         assertEquals("juan.perez@email.com", pedido.getCliente().getEmail());
@@ -55,7 +63,9 @@ public class PruebasTest {
         assertEquals(2, pedido.getCantidad());
         assertTrue(pedido.getNumeroPedido() > 0);
 
-        // Calculamos el total: (29.99 * 2) + 3.50 = 63.48€
+        // Calculamos el total: (29.99 * 2) + (gastos de envío con descuento)
+        // Cliente estándar: sin descuento → gastosEnvio = 3.50
+        // Total = 59.98 + 3.50 = 63.48€
         assertEquals(63.48, pedido.calcularTotal(), 0.01);
     }
 
