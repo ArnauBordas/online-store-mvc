@@ -65,7 +65,7 @@ public class PruebasTest {
 
         // Calculamos el total: (29.99 * 2) + (gastos de envío con descuento)
         // Cliente estándar: sin descuento → gastosEnvio = 3.50
-        // Total = 59.98 + 3.50 = 63.48€
+        // Total = 59.98 + 3.50 = 63.48 €
         assertEquals(63.48, pedido.calcularTotal(), 0.01);
     }
 
