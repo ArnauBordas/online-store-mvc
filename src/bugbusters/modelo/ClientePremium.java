@@ -1,5 +1,16 @@
 package bugbusters.modelo;
 
+/**
+ * Clase que representa un cliente premium de la tienda.
+ *
+ * Los clientes premium pagan una cuota fija de 30€ y tienen un 20% de descuento
+ * en los gastos de envío. Estos valores son fijos y no modificables por el usuario.
+ *
+ * @author BugBusters
+ * @version 1.0
+ * @since 1.0
+ */
+
 public class ClientePremium extends Cliente {
 /*
 Estamos determinando que la lógica de negocio es que no habrá descuentos y cuotas individuales entre clientes premium

@@ -4,49 +4,40 @@ import bugbusters.controlador.Controlador;
 import bugbusters.modelo.Articulo;
 import bugbusters.modelo.Cliente;
 import bugbusters.modelo.Pedido;
-
-import bugbusters.modelo.excepciones.RecursoNoEncontradoException;
-import bugbusters.modelo.excepciones.YaExisteException;
-import bugbusters.modelo.excepciones.TipoClienteInvalidoException;
-import bugbusters.modelo.excepciones.PedidoNoCancelableException;
+import bugbusters.modelo.excepciones.*;
 
 import java.util.List;
 import java.util.Scanner;
 
-/*
- * Clase Vista
+/**
+ * Clase que gestiona la interacción con el usuario a través de la consola.
  *
- * Se encarga de toda la interacción con el usuario por consola:
- * - mostrar menús
- * - pedir datos
- * - mostrar resultados
+ * Se encarga de mostrar los menús, solicitar datos al usuario y mostrar los resultados.
+ * En el patrón MVC, la Vista no accede directamente al Modelo, sino que se comunica
+ * únicamente a través del Controlador.
  *
- * En MVC:
- * - La vista NO debe acceder al modelo directamente.
- * - La vista solo usa el Controlador.
- *
- * =========================================================
- * BLOQUE IMPLEMENTADO POR: Erick Coll Rodríguez
- * PARTE DESARROLLADA: Menú de artículos
- * =========================================================
+ * @author BugBusters
+ * @version 1.0
+ * @since 1.0
  */
+
 public class Vista {
 
-    private Scanner teclado;
-    private Controlador controlador;
+    private final Scanner teclado;
+    private final Controlador controlador;
 
-    /*
-     * Constructor
-     * Inicializa el Scanner y el Controlador.
+    /**
+     * Constructor que inicializa la vista.
+     * Crea el Scanner para leer de teclado y el Controlador para comunicarse con el modelo.
      */
     public Vista() {
         teclado = new Scanner(System.in);
         controlador = new Controlador();
     }
 
-    /*
-     * iniciar()
-     * Muestra el menú principal en bucle hasta que el usuario salga.
+    /**
+     * Inicia el bucle principal del programa.
+     * Muestra el menú principal y procesa las opciones hasta que el usuario elija salir.
      */
     public void iniciar() {
         int opcion;
@@ -96,9 +87,11 @@ public class Vista {
 
     /* =========================================================
        ================= MENÚ DE ARTÍCULOS =====================
-       ========== IMPLEMENTADO POR ERICK COLL RODRÍGUEZ ========
        ========================================================= */
-
+    /**
+     * Gestiona el submenú de artículos.
+     * Permite añadir artículos o mostrar el listado completo.
+     */
     private void menuArticulos() {
         int opcion;
 
@@ -128,43 +121,46 @@ public class Vista {
         } while (opcion != 0);
     }
 
-    /*
-     * anadirArticulo()
-     * Pide datos por teclado, crea el artículo desde el controlador y lo guarda.
+    /**
+     * Solicita los datos de un nuevo artículo y lo añade al sistema.
+     * Primero verifica si el código ya existe para evitar duplicados.
      */
     private void anadirArticulo() {
         System.out.println("\n--- Añadir artículo ---");
+
+        // 1. Pedimos el código
         String codigo = leerTexto("Código: ");
 
-        // Primero comprobamos si el código ya existe
+        // 2. Verificamos si existe, puede lanzar excepción RecursoNoEncontrado si no existe
         try {
-            controlador.buscarArticulo(codigo);  // Si existe, NO lanza excepción
-            // Si llegamos aquí, el artículo SÍ existe
-            throw new YaExisteException("artículo", codigo);  // Lanzamos excepción
-
+            controlador.buscarArticulo(codigo);
+            // Si no lanza excepción, es que existe
+            System.out.println("[ERROR] Ya existe un artículo con código: " + codigo);
+            return;
         } catch (RecursoNoEncontradoException e) {
-            // El artículo NO existe, podemos pedir el resto de datos
-            String descripcion = leerTexto("Descripción: ");
-            double precioVenta = leerDouble("Precio de venta: ");
-            double gastosEnvio = leerDouble("Gastos de envío: ");
-            int tiempoPreparacionMin = leerEntero("Tiempo de preparación (minutos): ");
+            // Excepción capturada: El artículo no existe (podemos continuar)
+        }
 
-            try {
-                controlador.anadirArticulo(codigo, descripcion, precioVenta, gastosEnvio, tiempoPreparacionMin);
-                System.out.println("\n[INFO] Artículo añadido correctamente.");
-            } catch (YaExisteException ex) {
-                System.out.println(ex.getMessage());
-            }
+        // 3. Pedimos resto de datos
+        String descripcion = leerTexto("Descripción: ");
+        double precioVenta = leerDouble("Precio de venta: ");
+        double gastosEnvio = leerDouble("Gastos de envío: ");
+        int tiempoPreparacionMin = leerEntero("Tiempo de preparación (minutos): ");
 
+        // 4. Añadimos el artículo, pero puede lanzar excepción YaExiste así que se maneja
+        try {
+            controlador.anadirArticulo(codigo, descripcion, precioVenta,
+                    gastosEnvio, tiempoPreparacionMin);
+            System.out.println("\n[INFO] Artículo añadido correctamente.");
         } catch (YaExisteException e) {
-            // Capturamos la excepción que lanzamos si el código ya existe
+            // Excepción capturada: Alguien añadió el mismo artículo justo después de nuestra comprobación
             System.out.println(e.getMessage());
         }
     }
 
-    /*
-     * mostrarArticulos()
-     * Obtiene la lista desde el controlador y la imprime.
+    /**
+     * Muestra por pantalla todos los artículos registrados.
+     * Si no hay artículos, muestra un mensaje informativo.
      */
     private void mostrarArticulos() {
         System.out.println("\nListado de artículos:");
@@ -179,10 +175,13 @@ public class Vista {
             }
         }
     }
-    // ==========================================
-    //       MENÚ DE CLIENTES
-    // ==========================================
-
+    /* =========================================================
+       ================= MENÚ DE CLIENTES =====================
+       ========================================================= */
+    /**
+     * Gestiona el submenú de clientes.
+     * Permite añadir, buscar, mostrar y eliminar clientes.
+     */
     private void menuClientes() {
         int opcion;
 
@@ -193,7 +192,7 @@ public class Vista {
             System.out.println("1. Añadir cliente");
             System.out.println("2. Buscar cliente");
             System.out.println("3. Mostrar todos los clientes");
-            System.out.println("4. Mostrar clientes estandar");
+            System.out.println("4. Mostrar clientes estándar");
             System.out.println("5. Mostrar clientes premium");
             System.out.println("6. Eliminar cliente");
             System.out.println("0. Volver");
@@ -228,94 +227,114 @@ public class Vista {
         } while (opcion != 0);
     }
 
-    /*
-     * anadirCliente()
-     * Pide datos por teclado, crea el cliente desde el controlador y lo guarda.
+    /**
+     * Solicita los datos de un nuevo cliente y lo añade al sistema.
+     * Valída el formato del email y que no exista previamente.
      */
     private void anadirCliente() {
         System.out.println("\n--- Añadir Cliente ---");
-
+        // 1. Pedimos el email
         String email = leerTexto("Email: ");
 
-        // Comprobamos si el email ya existe
+        // 2. Validamos formato del email usando el controlador
+        if (!controlador.emailValido(email)) {
+            System.out.println("[ERROR] Email inválido: " + email);
+            return;
+        }
+
+        // 3. Verificamos si existe email, puede lanzar excepción RecursoNoEncontrado si no existe
         try {
-            controlador.buscarCliente(email);  // Si existe, NO lanza excepción
-            // Si llegamos aquí, el cliente SÍ existe y lanza la excepción
-            throw new YaExisteException("cliente", email);
-
+            controlador.buscarCliente(email); // Si no lanza excepción, es que ya existe
+            System.out.println("[ERROR] Ya existe un cliente con email: " + email);
+            return;
         } catch (RecursoNoEncontradoException e) {
-            // Si el cliente NO existe, continuamos
-            String nombre = leerTexto("Nombre: ");
-            String domicilio = leerTexto("Domicilio: ");
-            String nif = leerTexto("NIF: ");
-            int tipoCliente = leerEntero("Tipo de cliente (1- Estándar, 2- Premium): ");
+            // Excepción capturada: El cliente no existe (podemos continuar)
+        }
 
-            try {
-                boolean resultado = controlador.anadirCliente(email, nombre, domicilio, nif, tipoCliente);
-                if (resultado) {
-                    System.out.println("\n[INFO] Cliente añadido correctamente.");
-                }
-            } catch (TipoClienteInvalidoException | YaExisteException ex) {
-                System.out.println(ex.getMessage());
-            }
+        // 4. Pedimos el resto de datos
+        String nombre = leerTexto("Nombre: ");
+        String domicilio = leerTexto("Domicilio: ");
+        String nif = leerTexto("NIF: ");
+        int tipoCliente = leerEntero("Tipo de cliente (1- Estándar, 2- Premium): ");
 
-        } catch (YaExisteException e) {
-            System.out.println(e.getMessage());  // Se imprime el mensaje de la excepción
+        // 5. Añadimos el cliente, puede lanzar varias excepciones así que se manejan
+        try {
+            controlador.anadirCliente(email, nombre, domicilio, nif, tipoCliente);
+            System.out.println("\n[INFO] Cliente añadido correctamente.");
+        } catch (EmailInvalidoException | TipoClienteInvalidoException | YaExisteException e) {
+            System.out.println(e.getMessage()); // Capturamos cualquier excepción durante la creación
         }
     }
 
+    /**
+     * Busca un cliente por su email y muestra sus datos.
+     */
     private void buscarCliente(){
         String email = leerTexto("Introduce el Email del cliente: ");
 
         try {
+            // Buscamos el cliente, puede lanzar excepción RecursoNoEncontrado si no existe
             Cliente clienteEncontrado = controlador.buscarCliente(email);
             System.out.println("\n[Datos del Cliente]");
             System.out.println(clienteEncontrado);
         } catch (RecursoNoEncontradoException e) {
-            System.out.println(e.getMessage());
+            System.out.println(e.getMessage()); // Excepción capturada: El cliente no existe
         }
     }
 
+    /**
+     * Muestra todos los clientes registrados.
+     */
     private void obtenerTodosClientes(){
         System.out.println("\nListado de Clientes:");
         imprimirClientes("No hay clientes registrados.", controlador.obtenerTodosClientes());
     }
 
-
+    /**
+     * Muestra solo los clientes de tipo Estándar.
+     */
     private void obtenerClientesEstandar(){
         System.out.println("\nListado de Clientes Estándar:");
         imprimirClientes("No hay clientes estándar registrados.", controlador.obtenerClientesEstandar());
     }
 
-
+    /**
+     * Muestra solo los clientes de tipo Premium.
+     */
     private void obtenerClientesPremium(){
         System.out.println("\nListado de Clientes Premium:");
         imprimirClientes("No hay clientes premium registrados.", controlador.obtenerClientesPremium());
     }
 
-
+    /**
+     * Elimina un cliente del sistema previa confirmación.
+     */
     private void eliminarCliente(){
         System.out.println("\nEliminar Cliente");
         String email = leerTexto("Introduce el Email del cliente: ");
 
         try {
-            // Primero obtenemos sus datos para mostrarlos después (opcional)
+            // 1. Buscamos el cliente, puede lanzar excepción RecursoNoEncontrado si no existe
             Cliente aEliminar = controlador.buscarCliente(email);
-
-            // Luego lo eliminamos
+            // 2. Lo eliminamos (no lanza excepción)
             controlador.eliminarCliente(email);
 
             System.out.println("\n[INFO] Cliente eliminado con éxito:");
             System.out.println(aEliminar);
 
         } catch (RecursoNoEncontradoException e) {
-            System.out.println(e.getMessage());
+            System.out.println(e.getMessage()); // Excepción capturada: El cliente no existe
         }
     }
-    // ==========================================
-    //       MENÚ DE PEDIDOS
-    // ==========================================
 
+    /* =========================================================
+        ================= MENÚ DE PEDIDOS =====================
+       ========================================================= */
+
+    /**
+     * Gestiona el submenú de pedidos.
+     * Permite añadir, eliminar y mostrar pedidos.
+     */
     private void menuPedidos() {
         int opcion;
 
@@ -353,80 +372,88 @@ public class Vista {
         } while (opcion != 0);
     }
 
+    /**
+     * Añade un nuevo pedido al sistema.
+     * Si el cliente no existe, lo crea automáticamente.
+     */
     private void anadirPedido() {
         System.out.println("\n--- Añadir pedido ---");
 
         // 1. Pedimos email del cliente
         String emailCliente = leerTexto("Email del cliente: ");
-        Cliente cliente = null;
+        Cliente cliente;
 
-        // 2. Intentamos buscar el cliente (ahora lanza excepción)
+        // 2. Buscamos el cliente, puede lanzar excepción RecursoNoEncontrado si no existe
         try {
             cliente = controlador.buscarCliente(emailCliente);
-        } catch (RecursoNoEncontradoException e) {
-            // Cliente no existe, lo creamos automáticamente
-            System.out.println("[INFO] Cliente no existe. Se creará automáticamente.");
+            System.out.println("[INFO] Cliente encontrado: " + cliente.getNombre());
 
+        } catch (RecursoNoEncontradoException e) {   // Excepción capturada: Cliente no existe, procedemos a crearlo
+            System.out.println("[INFO] Cliente no existe. Se creará automáticamente.\n");
             String nombre = leerTexto("Nombre: ");
             String domicilio = leerTexto("Domicilio: ");
             String nif = leerTexto("NIF: ");
             int tipo = leerEntero("Tipo cliente (1-Estándar, 2-Premium): ");
 
-            //Crea al cliente
-            try {
+            try { // Intentamos crear el cliente, puede lanzar varias excepciones
                 boolean creado = controlador.anadirCliente(emailCliente, nombre, domicilio, nif, tipo);
                 if (!creado) {
                     System.out.println("[ERROR] No se pudo crear el cliente. Pedido cancelado.");
                     return;
                 }
-            } catch (TipoClienteInvalidoException | YaExisteException ex) {
-                System.out.println(ex.getMessage());
-                return;
-            }
-
-            // Recuperamos el cliente recién creado
-            try {
+                // 3. Cliente creado
                 cliente = controlador.buscarCliente(emailCliente);
-                System.out.println("[INFO] Cliente creado correctamente. Continuamos con la creación del pedido.\n");
-            } catch (RecursoNoEncontradoException ex) {
-                System.out.println("[ERROR] Error inesperado al recuperar el cliente creado.");
+                System.out.println("[INFO] Cliente creado correctamente: " + cliente.getNombre() + "\n");
+
+            } catch (EmailInvalidoException | TipoClienteInvalidoException | YaExisteException |
+                     RecursoNoEncontradoException ex) {
+                System.out.println(ex.getMessage()); // Capturamos cualquier excepción durante la creación
                 return;
             }
         }
 
-        // 3. Procedemos con la creación del pedido
+        // 4. Creación del pedido, puede lanzar excepción RecursoNoEncontrado
         try {
-            // Pedimos código del artículo
             String codigoArticulo = leerTexto("Código del artículo: ");
-
-            // Verificamos que el artículo exista
+            // Buscamos el artículo, puede lanzar excepción RecursoNoEncontrado si no existe
             Articulo articulo = controlador.buscarArticulo(codigoArticulo);
 
-            // Pedimos cantidad
-            int cantidad = leerEntero("Cantidad: ");
+            System.out.println("[Artículo: " + articulo.getDescripcion() + " - Precio: " + articulo.getPrecioVenta() + "€]");
 
-            // Creamos el pedido
+            int cantidad = leerEntero("Cantidad: ");
+            int tiempoTotal = articulo.getTiempoPreparacionMin() * cantidad;
+
+            // Creamos el pedido, puede lanzar excepción RecursoNoEncontrado
             Pedido pedido = controlador.anadirPedido(emailCliente, codigoArticulo, cantidad);
-            System.out.println("\n[INFO] Pedido creado correctamente:");
+
+            System.out.println("\n[INFO] Pedido creado correctamente para " + cliente.getNombre() + ":");
+            System.out.println("Artículo: " + articulo.getDescripcion() + " x" + cantidad);
+            System.out.println("Tiempo estimado: " + tiempoTotal + " minutos");
             System.out.println(pedido);
 
         } catch (RecursoNoEncontradoException e) {
-            System.out.println(e.getMessage());
+            System.out.println(e.getMessage()); // Excepción capturada: Artículo no encontrado
         }
     }
 
+    /**
+     * Elimina un pedido si aún puede cancelarse.
+     */
     private void eliminarPedido() {
         System.out.println("\nEliminar pedido");
         int numeroPedido = leerEntero("Número de pedido: ");
 
-        try {
+        try { // Eliminamos el pedido, puede lanzar excepciones: RecursoNoEncontrado / PedidoNoCancelable
             controlador.eliminarPedido(numeroPedido);
             System.out.println("\n[OK] Pedido eliminado correctamente.");
         } catch (RecursoNoEncontradoException | PedidoNoCancelableException e) {
-            System.out.println(e.getMessage());
+            System.out.println(e.getMessage()); // Excepciones capturadas durante la eliminación
         }
     }
 
+    /**
+     * Muestra los pedidos pendientes, opcionalmente filtrados por email.
+     */
     private void mostrarPedidosPendientes() {
         System.out.println("\nMostrar pedidos pendientes");
         String emailFiltro = leerTexto("Filtrar por email del cliente (dejar vacío para todos): ");
@@ -440,6 +467,9 @@ public class Vista {
         }
     }
 
+    /**
+     * Muestra los pedidos enviados, opcionalmente filtrados por email.
+     */
     private void mostrarPedidosEnviados() {
         System.out.println("\nMostrar pedidos enviados");
         String emailFiltro = leerTexto("Filtrar por email del cliente (dejar vacío para todos): ");
@@ -456,39 +486,58 @@ public class Vista {
        ================== MÉTODOS AUXILIARES ===================
        ========================================================= */
 
-    /*
-     * leerTexto()
-     * Lee una línea completa de texto.
+    /**
+     * Lee una línea de texto introducida por el usuario.
+     *
+     * @param mensaje Mensaje a mostrar al usuario
+     * @return Texto introducido
      */
     private String leerTexto(String mensaje) {
         System.out.print(mensaje);
         return teclado.nextLine();
     }
 
-    /*
-     * leerEntero()
-     * Lee un entero. (Versión simple)
-     * Si el usuario escribe algo que no es número, puede fallar.
-     * Más adelante se puede mejorar con validación.
+    /**
+     * Lee un número entero introducido por el usuario con validación.
+     * Reintenta hasta que se introduzca un valor válido.
+     *
+     * @param mensaje Mensaje a mostrar al usuario
+     * @return Número entero introducido
      */
     private int leerEntero(String mensaje) {
-        System.out.print(mensaje);
-        return Integer.parseInt(teclado.nextLine());
+        while (true) {
+            System.out.print(mensaje);
+            String linea = teclado.nextLine().trim();
+
+            if (linea.isEmpty()) {
+                System.out.println("[ERROR] No se permiten valores vacíos.");
+                continue;
+            }
+
+            try {
+                return Integer.parseInt(linea);
+            } catch (NumberFormatException e) {
+                System.out.println("[ERROR] Debes introducir un número válido.");
+            }
+        }
     }
 
-    /*
-     * leerDouble()
-     * Lee un decimal. (Versión simple)
-     * Más adelante se puede mejorar con validación.
+    /**
+     * Lee un número decimal introducido por el usuario.
+     *
+     * @param mensaje Mensaje a mostrar al usuario
+     * @return Número decimal introducido
      */
     private double leerDouble(String mensaje) {
         System.out.print(mensaje);
         return Double.parseDouble(teclado.nextLine());
     }
 
-    /*
-     * imprimirClientes()
-     * Metodo para imprimir clientes manteniendo el mensaje personalizado pero simplificando codigo
+    /**
+     * Imprime una lista de clientes con un mensaje personalizado si está vacía.
+     *
+     * @param mensajePersonalizado Mensaje a mostrar si la lista está vacía
+     * @param clientes Lista de clientes a imprimir
      */
     private void imprimirClientes(String mensajePersonalizado, List<Cliente> clientes) {
         if (clientes.isEmpty()) {
@@ -499,5 +548,4 @@ public class Vista {
             }
         }
     }
-
 }

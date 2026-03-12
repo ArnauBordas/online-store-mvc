@@ -1,51 +1,33 @@
 package bugbusters.modelo;
 
 import bugbusters.modelo.excepciones.YaExisteException;
-
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+/**
+ * Clase que gestiona todos los datos de la aplicación.
+ *
+ * Actúa como repositorio central que almacena y administra las colecciones
+ * de artículos, clientes y pedidos. Proporciona métodos para añadir, buscar,
+ * eliminar y filtrar los diferentes recursos del sistema.
+ *
+ * Las colecciones utilizadas son:
+ * - {@link LinkedHashMap} para artículos (mantiene orden de inserción)
+ * - {@link ArrayList} para pedidos
+ * - {@link GenericoDAO} para clientes (implementación genérica)
+ *
+ * @author BugBusters
+ * @version 1.0
+ * @since 1.0
+ */
 
-/*
- * Clase Datos
- *
- * BLOQUE IMPLEMENTADO POR: Erick Coll Rodríguez
- * PARTE DESARROLLADA: Gestión de artículos y pedidos
- * =========================================================
- *
- * En esta primera versión se implementa:
- * - la colección de artículos
- * - el alta de artículos
- * - la búsqueda de artículos
- * - la comprobación de existencia
- * - la obtención del listado completo
- *
- * Hemos elegido LinkedHashMap porque:
- * - permite buscar rápido por clave
- * - mantiene el orden de inserción
- *
- * En el caso de artículos:
- * - clave  -> código del artículo
- * - valor  -> objeto Articulo
- * Colecciones implementadas:
- * - artículos
- * - pedidos
-      ========================================================= */
 public class Datos {
-
-
-    /*
-     * BLOQUE DE ERICK COLL RODRÍGUEZ
-     *
-     * Mapa donde se guardarán todos los artículos.
-     *
-     * La clave será el código del artículo en minúsculas,
-     * para evitar problemas si un usuario introduce el código
-     * con mayúsculas o minúsculas diferentes.
-     * para evitar problemas de mayúsculas/minúsculas.
+    /**
+     * Colección de artículos almacenados por código.
+     * Se utiliza {@link LinkedHashMap} para mantener el orden de inserción.
      */
     private Map<String, Articulo> articulos;
 
@@ -53,27 +35,26 @@ public class Datos {
        =================== COLECCIÓN DE PEDIDOS ===============
        ========================================================= */
 
-    /*
-     * Lista de todos los pedidos realizados.
+    /**
+     * Lista de todos los pedidos realizados en el sistema.
      */
     private List<Pedido> listaPedidos;
 
-    /*
-     * Último número de pedido generado
+    /**
+     * Último número de pedido generado.
+     * Se utiliza para asignar números secuenciales a los nuevos pedidos.
      */
     private int ultimoNumeroPedido;
 
-    /*
-     * Constructor
-     *
-     * Inicializa la colección de artículos vacía.
-     *
-     * Más adelante, cuando otros compañeros añadan su parte,
-     * aquí también se inicializarán las colecciones de clientes
-     * y pedidos.
-     * Inicializa las colecciones vacías.
+    /**
+     * DAO genérico para la gestión de clientes.
+     * Utiliza el email como clave identificadora.
      */
     private GenericoDAO<String, Cliente> clientes;
+
+    /**
+     * Constructor que inicializa todas las colecciones vacías.
+     */
     public Datos() {
         articulos = new LinkedHashMap<>();
         listaPedidos = new ArrayList<>();
@@ -83,84 +64,42 @@ public class Datos {
 
     /* =========================================================
        ================= GESTIÓN DE ARTÍCULOS ==================
-       ========== IMPLEMENTADO POR ERICK COLL RODRÍGUEZ ========
        ========================================================= */
 
-    /*
-     * anadirArticulo()
-     *
+    /**
      * Añade un artículo a la colección.
      *
-     * Parámetro:
-     * - articulo -> objeto Articulo que se quiere guardar
-     *
-     * Funcionamiento:
-     * - se usa el código del artículo como clave
-     * - se convierte la clave a minúsculas para unificar búsquedas
-     *
-     * IMPORTANTE:
-     * En esta versión básica, si se añade un artículo con un código
-     * que ya existe, el nuevo artículo sustituirá al anterior,
-     * porque usamos put().
-     *
-     * Si más adelante el grupo decide evitar duplicados,
-     * se podrá ampliar fácilmente con validaciones o excepciones.
+     * @param articulo El artículo a añadir
      */
-    public void anadirArticulo(Articulo articulo) throws YaExisteException {
+    public void anadirArticulo(Articulo articulo) {
         String codigo = articulo.getCodigo().toLowerCase();
-
-        if (articulos.containsKey(codigo)) {  // Comprueba si ya existe
-            throw new YaExisteException("artículo", articulo.getCodigo());  // Lanza excepción
-        }
-
         articulos.put(codigo, articulo);
     }
 
-    /*
-     * buscarArticulo()
-     *
+    /**
      * Busca un artículo a partir de su código.
      *
-     * Parámetro:
-     * - codigo -> código del artículo que se quiere buscar
-     *
-     * Devuelve:
-     * - el objeto Articulo si existe
-     * - null si no existe
-     *
-     * Se convierte el código a minúsculas para que la búsqueda
-     * sea consistente con la forma en que se guardan los datos.
+     * @param codigo Código del artículo que se quiere buscar
+     * @return El objeto Articulo si existe, null si no existe
      */
     public Articulo buscarArticulo(String codigo) {
         return articulos.get(codigo.toLowerCase());
     }
 
-    /*
-     * existeArticulo()
-     *
+    /**
      * Comprueba si ya existe un artículo con un código concreto.
      *
-     * Parámetro:
-     * - codigo -> código que se desea comprobar
-     *
-     * Devuelve:
-     * - true si el artículo existe
-     * - false si no existe
+     * @param codigo Código que se desea comprobar
+     * @return true si el artículo existe, false si no existe
      */
     public boolean existeArticulo(String codigo) {
         return articulos.containsKey(codigo.toLowerCase());
     }
 
-    /*
-     * obtenerTodosArticulos()
-     *
+    /**
      * Devuelve todos los artículos guardados en forma de lista.
      *
-     * Esto es útil porque luego, desde la vista, será mucho más fácil
-     * recorrer la colección y mostrar los artículos por pantalla.
-     *
-     * Se crea una nueva lista a partir de los valores del mapa
-     * para no exponer directamente la estructura interna.
+     * @return Lista con todos los artículos
      */
     public List<Articulo> obtenerTodosArticulos() {
         return new ArrayList<>(articulos.values());
@@ -170,30 +109,39 @@ public class Datos {
        ================= GESTIÓN DE PEDIDOS ===================
        ========================================================= */
 
-    /*
-     * Genera un número de pedido único incremental
+    /**
+     * Genera un número de pedido único incremental.
+     *
+     * @return Número de pedido único
      */
     public int generarNumeroPedido() {
         ultimoNumeroPedido++;
         return ultimoNumeroPedido;
     }
 
-    /*
+    /**
      * Añade un pedido a la lista de pedidos.
+     *
+     * @param pedido El pedido a añadir
      */
     public void anadirPedido(Pedido pedido) {
         listaPedidos.add(pedido);
     }
 
-    /*
-     * Elimina un pedido de la lista
+    /**
+     * Elimina un pedido de la lista.
+     *
+     * @param pedido El pedido a eliminar
      */
     public void eliminarPedido(Pedido pedido) {
         listaPedidos.remove(pedido);
     }
 
-    /*
-     * Busca un pedido por número
+    /**
+     * Busca un pedido por su número.
+     *
+     * @param numeroPedido Número del pedido a buscar
+     * @return El pedido si existe, null si no existe
      */
     public Pedido buscarPedido(int numeroPedido) {
         for (Pedido p : listaPedidos) {
@@ -202,8 +150,10 @@ public class Datos {
         return null;
     }
 
-    /*
-     * Devuelve la lista de pedidos pendientes (no enviados)
+    /**
+     * Devuelve la lista de pedidos pendientes (no enviados).
+     *
+     * @return Lista de pedidos pendientes
      */
     public List<Pedido> getPedidosPendientes() {
         return listaPedidos.stream()
@@ -211,8 +161,10 @@ public class Datos {
                 .collect(Collectors.toList());
     }
 
-    /*
-     * Devuelve la lista de pedidos enviados
+    /**
+     * Devuelve la lista de pedidos ya enviados.
+     *
+     * @return Lista de pedidos enviados
      */
     public List<Pedido> getPedidosEnviados() {
         return listaPedidos.stream()
@@ -220,24 +172,33 @@ public class Datos {
                 .collect(Collectors.toList());
     }
 
-    // ==========================================
-    //       GESTIÓN DE CLIENTES
-    // ==========================================
+    /* =========================================================
+      ================= GESTIÓN DE CLIENTES =====================
+      ========================================================= */
+    /**
+     * Añade un cliente a la colección.
+     *
+     * @param cliente El cliente a añadir
+     */
+    public void anadirCliente(Cliente cliente) {
+        clientes.anadir(cliente.getEmail(), cliente);
+    }
 
     /**
-     * Añadir con validación de clave única (email).
+     * Comprueba si ya existe un cliente con un email concreto.
+     *
+     * @param email Email que se desea comprobar
+     * @return true si el cliente existe, false si no existe
      */
-    public boolean anadirCliente(Cliente cliente) throws YaExisteException {
-        String email = cliente.getEmail();
-        if (clientes.existe(email)) {
-            throw new YaExisteException("un cliente", email);  // ← EXCEPCIÓN GENÉRICA
-        }
-        clientes.anadir(email, cliente);
-        return true;
+    public boolean existeCliente(String email) {
+        return clientes.existe(email);
     }
 
     /**
      * Busca un cliente por su email.
+     *
+     * @param email Email del cliente a buscar
+     * @return El cliente si existe, null si no existe
      */
     public Cliente buscarCliente(String email) {
         return clientes.buscar(email);
@@ -245,6 +206,8 @@ public class Datos {
 
     /**
      * Devuelve la lista completa de clientes.
+     *
+     * @return ArrayList con todos los clientes
      */
     public ArrayList<Cliente> obtenerTodosClientes() {
         return clientes.obtenerTodos();
@@ -252,10 +215,11 @@ public class Datos {
 
     /**
      * Filtra y devuelve solo los clientes de tipo Estándar.
+     *
+     * @return ArrayList con los clientes estándar
      */
     public ArrayList<Cliente> obtenerClientesEstandar() {
         ArrayList<Cliente> listaEstandar = new ArrayList<>();
-        // 'datos' es accesible por ser protected en GenericoDAO
         for (Cliente c : clientes.obtenerTodos()) {
             if (c instanceof ClienteEstandar) {
                 listaEstandar.add(c);
@@ -266,6 +230,8 @@ public class Datos {
 
     /**
      * Filtra y devuelve solo los clientes de tipo Premium.
+     *
+     * @return ArrayList con los clientes premium
      */
     public ArrayList<Cliente> obtenerClientesPremium() {
         ArrayList<Cliente> listaPremium = new ArrayList<>();
@@ -279,6 +245,9 @@ public class Datos {
 
     /**
      * Elimina un cliente por su email.
+     *
+     * @param email Email del cliente a eliminar
+     * @return true si se eliminó correctamente, false si no existía
      */
     public boolean eliminarCliente(String email) {
         if (clientes.existe(email)) {

@@ -1,5 +1,16 @@
 package bugbusters.modelo;
 
+/**
+ * Clase abstracta que representa un cliente genérico de la tienda.
+ *
+ * Define los atributos comunes a todos los clientes y los métodos abstractos
+ * que deben implementar las clases hijas para calcular la cuota y el descuento de envío.
+ *
+ * @author BugBusters
+ * @version 1.0
+ * @since 1.0
+ */
+
 public abstract class Cliente {
     private String email;
     private String nombre;

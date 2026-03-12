@@ -1,12 +1,14 @@
 package bugbusters.modelo;
 
-/*
- * Clase Articulo
+/**
+ * Clase que representa un artículo de la tienda.
  *
- * Representa un artículo de la tienda.
- * Contiene la información básica para poder venderlo y enviarlo.
+ * Contiene la información básica necesaria para gestionar la venta y el envío de un artículo,
+ * incluyendo su precio, gastos de envío y tiempo de preparación.
  *
- * NOTA: el tiempo de preparación lo interpretamos en MINUTOS.
+ * @author BugBusters
+ * @version 1.0
+ * @since 1.0
  */
 public class Articulo {
 

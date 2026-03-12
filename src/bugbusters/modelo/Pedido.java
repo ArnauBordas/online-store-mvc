@@ -1,5 +1,17 @@
 package bugbusters.modelo;
 
+/**
+ * Clase que representa un pedido realizado por un cliente.
+ *
+ * Contiene la información del cliente, el artículo solicitado, la cantidad,
+ * la fecha y hora del pedido, y proporciona métodos para calcular el total
+ * y comprobar si el pedido puede ser cancelado.
+ *
+ * @author BugBusters
+ * @version 1.0
+ * @since 1.0
+ */
+
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 

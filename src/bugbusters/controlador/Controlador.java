@@ -6,46 +6,45 @@ import bugbusters.modelo.ClienteEstandar;
 import bugbusters.modelo.ClientePremium;
 import bugbusters.modelo.Datos;
 import bugbusters.modelo.Pedido;
-import bugbusters.modelo.excepciones.RecursoNoEncontradoException;
-import bugbusters.modelo.excepciones.YaExisteException;
-import bugbusters.modelo.excepciones.TipoClienteInvalidoException;
-import bugbusters.modelo.excepciones.PedidoNoCancelableException;
+import bugbusters.modelo.excepciones.*;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
-
-
-/*
- * Clase Controlador
+/**
+ * Clase Controlador que actúa como puente entre la Vista y el Modelo.
  *
- * Esta clase actúa como puente entre la Vista y el Modelo.
+ * En el patrón MVC (Modelo-Vista-Controlador), esta clase es el intermediario
+ * que procesa las solicitudes de la vista, interactúa con el modelo (Datos)
+ * y devuelve los resultados. La vista nunca accede directamente al modelo,
+ * solo se comunica a través del controlador.
  *
- * En el patrón MVC:
- * - la Vista no debe acceder directamente al Modelo
- * - la Vista solo debe comunicarse con el Controlador
- * - el Controlador es quien llama a la clase Datos
+ * El controlador se encarga de:
+ * <ul>
+ *   <li>Recibir y validar los datos provenientes de la vista</li>
+ *   <li>Crear los objetos del modelo (Artículo, Cliente, Pedido)</li>
+ *   <li>Invocar los métodos correspondientes en la capa de datos</li>
+ *   <li>Manejar las excepciones y transformarlas cuando sea necesario</li>
+ *   <li>Devolver los resultados a la vista para su presentación</li>
+ * </ul>
  *
- * =========================================================
- * BLOQUE IMPLEMENTADO POR: Erick Coll Rodríguez
- * PARTE DESARROLLADA: Gestión de artículos
- * =========================================================
+ * @author BugBusters
+ * @version 1.0
+ * @since 1.0
  */
+
 public class Controlador {
 
-    /*
+    /**
      * Referencia al modelo principal de la aplicación.
-     *
-     * La clase Datos se encargará de almacenar toda la información
-     * del sistema.
+     * La clase Datos se encargará de almacenar toda la información del sistema.
      */
     private Datos datos;
 
-    /*
-     * Constructor
-     *
-     * Crea el objeto Datos para poder trabajar con la información
-     * de la aplicación.
+    /**
+     * Constructor que inicializa el controlador.
+     * Crea una nueva instancia de la clase Datos para poder trabajar
+     * con la información de la aplicación.
      */
     public Controlador() {
         datos = new Datos();
@@ -53,68 +52,49 @@ public class Controlador {
 
     /* =========================================================
        ================= GESTIÓN DE ARTÍCULOS ==================
-       ========== IMPLEMENTADO POR ERICK COLL RODRÍGUEZ ========
        ========================================================= */
-
-    /*
-     * anadirArticulo()
+    /**
+     * Busca un artículo por su código.
      *
-     * Recibe los datos de un artículo desde la vista,
-     * crea el objeto Articulo y lo envía al modelo.
-     *
-     * Parámetros:
-     * - codigo
-     * - descripcion
-     * - precioVenta
-     * - gastosEnvio
-     * - tiempoPreparacionMin
-     */
-    public void anadirArticulo(String codigo, String descripcion, double precioVenta,
-                               double gastosEnvio, int tiempoPreparacionMin) throws YaExisteException {
-        Articulo articulo = new Articulo(codigo, descripcion, precioVenta, gastosEnvio, tiempoPreparacionMin);
-        datos.anadirArticulo(articulo);  // Esta línea puede lanzar YaExisteException
-    }
-
-    /*
-     * buscarArticulo()
-     *
-     * Busca un artículo a partir de su código.
-     *
-     * Parámetro:
-     * - codigo -> código del artículo
-     *
-     * Devuelve:
-     * - el objeto Articulo si existe
-     * - null si no existe
+     * @param codigo Código del artículo a buscar
+     * @return El objeto Artículo si existe
+     * @throws RecursoNoEncontradoException Si no existe un artículo con ese código
      */
     public Articulo buscarArticulo(String codigo) throws RecursoNoEncontradoException {
         Articulo articulo = datos.buscarArticulo(codigo);
-        if (articulo == null) {
+        if (articulo == null) { // Lanzamos excepción si no existe
             throw new RecursoNoEncontradoException("Artículo", codigo);
         }
         return articulo;
     }
 
-    /*
-     * existeArticulo()
+    /**
+     * Añade un nuevo artículo al sistema.
      *
-     * Comprueba si ya existe un artículo con ese código.
-     *
-     * Devuelve:
-     * - true si existe
-     * - false si no existe
+     * @param codigo Código único identificador del artículo
+     * @param descripcion Descripción textual del artículo
+     * @param precioVenta Precio de venta del artículo en euros
+     * @param gastosEnvio Gastos de envío asociados al artículo
+     * @param tiempoPreparacionMin Tiempo de preparación en minutos
+     * @throws YaExisteException Si ya existe un artículo con el mismo código
      */
-    public boolean existeArticulo(String codigo) {
-        return datos.existeArticulo(codigo);
+    public void anadirArticulo(String codigo, String descripcion, double precioVenta,
+                               double gastosEnvio, int tiempoPreparacionMin)
+            throws YaExisteException {
+
+        if (datos.existeArticulo(codigo)) { // Lanzamos excepción si ya existe
+            throw new YaExisteException("artículo", codigo);
+        }
+
+        Articulo articulo = new Articulo(codigo, descripcion, precioVenta,
+                gastosEnvio, tiempoPreparacionMin);
+        datos.anadirArticulo(articulo); // No lanza excepciones
     }
 
-    /*
-     * obtenerTodosArticulos()
+    /**
+     * Obtiene una lista con todos los artículos almacenados.
      *
-     * Devuelve una lista con todos los artículos almacenados.
-     *
-     * Esta lista se utilizará desde la vista para mostrar
-     * los artículos por pantalla.
+     * @return Lista de todos los artículos
      */
     public List<Articulo> obtenerTodosArticulos() {
         return datos.obtenerTodosArticulos();
@@ -122,32 +102,29 @@ public class Controlador {
 
     /* =========================================================
        =================== GESTIÓN DE PEDIDOS ==================
-       ========== BLOQUE PARA NUEVA FUNCIONALIDAD =============
        ========================================================= */
 
     /**
-     * Añade un pedido.
-     * Devuelve el pedido creado si se añadió correctamente,
-     * o null si no se pudo crear (por ejemplo, artículo inexistente).
-     */
-    /**
-     * Añade un pedido.
-     * Devuelve:
-     * - el pedido creado si se pudo crear correctamente
-     * - null si el cliente o el artículo no existen
+     * Añade un nuevo pedido al sistema.
+     *
+     * @param emailCliente Email del cliente que realiza el pedido
+     * @param codigoArticulo Código del artículo solicitado
+     * @param cantidad Cantidad de unidades del artículo
+     * @return El objeto Pedido creado
+     * @throws RecursoNoEncontradoException Si el cliente o el artículo no existen
      */
     public Pedido anadirPedido(String emailCliente, String codigoArticulo, int cantidad)
             throws RecursoNoEncontradoException {
 
         // Buscar cliente
         Cliente cliente = datos.buscarCliente(emailCliente);
-        if (cliente == null) {
+        if (cliente == null) { // Lanzamos excepción si el cliente no existe
             throw new RecursoNoEncontradoException("Cliente", emailCliente);
         }
 
         // Buscar artículo
         Articulo articulo = datos.buscarArticulo(codigoArticulo);
-        if (articulo == null) {
+        if (articulo == null) { // Lanzamos excepción si el artículo no existe
             throw new RecursoNoEncontradoException("Artículo", codigoArticulo);
         }
 
@@ -156,36 +133,35 @@ public class Controlador {
         Pedido pedido = new Pedido(numeroPedido, cliente, articulo, cantidad, LocalDateTime.now());
 
         // Guardar pedido
-        datos.anadirPedido(pedido);
+        datos.anadirPedido(pedido); // No lanza excepciones
 
         return pedido;
     }
 
+
     /**
-     * Elimina un pedido.
-     * Devuelve:
-     * - true si se eliminó correctamente
-     * - false si no existe o no se puede eliminar
-     */
-    /**
-     * Elimina un pedido.
-     * Lanza RecursoNoEncontradoException si no existe el pedido.
+     * Elimina un pedido del sistema si es cancelable.
+     *
+     * @param numeroPedido Número identificador del pedido a eliminar
+     * @throws RecursoNoEncontradoException Si no existe un pedido con ese número
+     * @throws PedidoNoCancelableException Si el pedido ya ha sido enviado y no se puede cancelar
      */
     public void eliminarPedido(int numeroPedido) throws RecursoNoEncontradoException, PedidoNoCancelableException {
         Pedido pedido = datos.buscarPedido(numeroPedido);
-        if (pedido == null) {
+        if (pedido == null) { // Lanzamos excepción si no existe
             throw new RecursoNoEncontradoException("Pedido", String.valueOf(numeroPedido));
         }
-        if (!pedido.puedeCancelar()) {
+        if (!pedido.puedeCancelar()) { // Lanzamos excepción si ya está enviado
             throw new PedidoNoCancelableException(numeroPedido);
         }
-
-        datos.eliminarPedido(pedido);
+        datos.eliminarPedido(pedido); // No lanza excepciones
     }
 
     /**
-     * Obtiene los pedidos pendientes.
-     * Si emailCliente no es null ni vacío, filtra por email.
+     * Obtiene los pedidos pendientes (no enviados).
+     *
+     * @param emailCliente Email para filtrar por cliente (si es null o vacío, devuelve todos)
+     * @return Lista de pedidos pendientes
      */
     public List<Pedido> obtenerPedidosPendientes(String emailCliente) {
         List<Pedido> pedidos = datos.getPedidosPendientes();
@@ -199,8 +175,10 @@ public class Controlador {
     }
 
     /**
-     * Obtiene los pedidos enviados.
-     * Si emailCliente no es null ni vacío, filtra por email.
+     * Obtiene los pedidos ya enviados.
+     *
+     * @param emailCliente Email para filtrar por cliente (si es null o vacío, devuelve todos)
+     * @return Lista de pedidos enviados
      */
     public List<Pedido> obtenerPedidosEnviados(String emailCliente) {
         List<Pedido> pedidos = datos.getPedidosEnviados();
@@ -212,37 +190,73 @@ public class Controlador {
         }
         return pedidos;
     }
-    // ==========================================
-    //       GESTIÓN DE CLIENTES
-    // ==========================================
+    /* =========================================================
+       =================== GESTIÓN DE CLIENTES ==================
+       ========================================================= */
 
     /**
-     * añadirCliente()
-     * Crea el objeto específico según el tipo y lo guarda en el modelo.
+     * Valida el formato de una dirección de correo electrónico.
+     *
+     * @param email Email a validar
+     * @return true si el email tiene un formato válido, false en caso contrario
+     */
+    public boolean emailValido(String email) {
+        String regex = "^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+\\.[A-Za-z]+$";
+        return email != null && email.matches(regex);
+    }
+
+    /**
+     * Añade un nuevo cliente al sistema.
+     *
+     * @param email Email único del cliente
+     * @param nombre Nombre completo del cliente
+     * @param domicilio Dirección física del cliente
+     * @param nif NIF del cliente
+     * @param tipoCliente Tipo de cliente (1-Estándar, 2-Premium)
+     * @return true si el cliente se añadió correctamente
+     * @throws EmailInvalidoException Si el email no tiene un formato válido
+     * @throws TipoClienteInvalidoException Si el tipo de cliente no es 1 o 2
+     * @throws YaExisteException Si ya existe un cliente con el mismo email
      */
     public boolean anadirCliente(String email, String nombre, String domicilio, String nif, int tipoCliente)
-            throws TipoClienteInvalidoException, YaExisteException {
-        Cliente nuevoCliente;
+            throws EmailInvalidoException, TipoClienteInvalidoException, YaExisteException {
 
+        // 1. Validar formato del email
+        if (!emailValido(email)) { // Lanzamos excepción si el email no es válido
+            throw new EmailInvalidoException(email);
+        }
+
+        // 2. Verificar si ya existe
+        if (datos.existeCliente(email)) { // Lanzamos excepción si ya existe
+            throw new YaExisteException("cliente", email);
+        }
+
+        // 3. Crear cliente según tipo
+        Cliente nuevoCliente;
         if (tipoCliente == 1) {
             nuevoCliente = new ClienteEstandar(email, nombre, domicilio, nif);
         } else if (tipoCliente == 2) {
             nuevoCliente = new ClientePremium(email, nombre, domicilio, nif);
-        } else {
+        } else { // Lanzamos excepción si el tipo no es válido
             throw new TipoClienteInvalidoException(tipoCliente);
         }
 
-        return datos.anadirCliente(nuevoCliente);
+        // 4. Guardar cliente
+        datos.anadirCliente(nuevoCliente); // No lanza excepciones
+        return true;
     }
 
     /**
-     * eliminarCliente()
-     * Solicita al modelo la eliminar un cliente por email.
+     * Elimina un cliente del sistema por su email.
+     *
+     * @param email Email del cliente a eliminar
+     * @return true si el cliente se eliminó correctamente
+     * @throws RecursoNoEncontradoException Si no existe un cliente con ese email
      */
     public boolean eliminarCliente(String email) throws RecursoNoEncontradoException {
         //Comprobamos que existe
         Cliente cliente = datos.buscarCliente(email);
-        if (cliente == null) {
+        if (cliente == null) { // Lanzamos excepción si no existe
             throw new RecursoNoEncontradoException("Cliente", email);
         }
         // Si existe lo eliminamos
@@ -250,8 +264,11 @@ public class Controlador {
     }
 
     /**
-     * buscarCliente()
-     * Devuelve el objeto cliente buscado per email.
+     * Busca un cliente por su email.
+     *
+     * @param email Email del cliente a buscar
+     * @return El objeto Cliente si existe
+     * @throws RecursoNoEncontradoException Si no existe un cliente con ese email
      */
     public Cliente buscarCliente(String email) throws RecursoNoEncontradoException {
         Cliente cliente = datos.buscarCliente(email);
@@ -262,24 +279,27 @@ public class Controlador {
     }
 
     /**
-     * listarClientes()
-     * Devuelve la lista completa de clientes.
+     * Obtiene una lista con todos los clientes.
+     *
+     * @return Lista de todos los clientes
      */
     public List<Cliente> obtenerTodosClientes() {
         return datos.obtenerTodosClientes();
     }
 
     /**
-     * listarClientesEstandar()
-     * Filtra a través del modelo los clientes estándar.
+     * Obtiene una lista con todos los clientes de tipo Estándar.
+     *
+     * @return Lista de clientes estándar
      */
     public List<Cliente> obtenerClientesEstandar() {
         return datos.obtenerClientesEstandar();
     }
 
     /**
-     * listarClientesPremium()
-     * Filtra a través del modelo los clientes premium.
+     * Obtiene una lista con todos los clientes de tipo Premium.
+     *
+     * @return Lista de clientes premium
      */
     public List<Cliente> obtenerClientesPremium() {
         return datos.obtenerClientesPremium();
