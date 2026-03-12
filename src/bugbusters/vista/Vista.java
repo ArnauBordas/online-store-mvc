@@ -11,99 +11,69 @@ import java.util.Scanner;
 
 /**
  * Clase que gestiona la interacción con el usuario a través de la consola.
- *
- * Se encarga de mostrar los menús, solicitar datos al usuario y mostrar los resultados.
- * En el patrón MVC, la Vista no accede directamente al Modelo, sino que se comunica
- * únicamente a través del Controlador.
- *
- * @author BugBusters
- * @version 1.0
- * @since 1.0
+ * Solo se ha mejorado la presentación visual.
+ * No modifica la lógica del programa.
  */
-
 public class Vista {
 
     private final Scanner teclado;
     private final Controlador controlador;
 
-    /**
-     * Constructor que inicializa la vista.
-     * Crea el Scanner para leer de teclado y el Controlador para comunicarse con el modelo.
-     */
     public Vista() {
         teclado = new Scanner(System.in);
         controlador = new Controlador();
     }
 
-    /**
-     * Inicia el bucle principal del programa.
-     * Muestra el menú principal y procesa las opciones hasta que el usuario elija salir.
-     */
     public void iniciar() {
         int opcion;
 
+        TerminalUI.showWelcome();
+
         do {
             mostrarMenuPrincipal();
-            opcion = leerEntero("> Selecciona una opción: ");
+            opcion = leerEntero("Selecciona una opción: ");
 
             switch (opcion) {
                 case 1:
                     menuArticulos();
                     break;
-
                 case 2:
                     menuClientes();
                     break;
-
                 case 3:
                     menuPedidos();
                     break;
-
                 case 0:
-                    System.out.println("Saliendo del programa...");
+                    TerminalUI.info("Saliendo del programa...");
+                    TerminalUI.showGoodbye();
                     break;
-
                 default:
-                    System.out.println("Opción no válida.");
+                    TerminalUI.error("Opción no válida.");
             }
 
         } while (opcion != 0);
     }
 
-    /* =========================================================
-       =================== MENÚ PRINCIPAL ======================
-       ========================================================= */
-
     private void mostrarMenuPrincipal() {
-        System.out.println("\n====================================");
-        System.out.println("         MENÚ PRINCIPAL");
-        System.out.println("====================================");
-        System.out.println("1. Gestión de artículos");
-        System.out.println("2. Gestión de clientes");
-        System.out.println("3. Gestión de pedidos");
-        System.out.println("0. Salir");
-        System.out.println("====================================");
+        TerminalUI.showMenu("MENÚ PRINCIPAL", new String[]{
+                "1. Gestión de artículos",
+                "2. Gestión de clientes",
+                "3. Gestión de pedidos",
+                "0. Salir"
+        });
     }
 
-    /* =========================================================
-       ================= MENÚ DE ARTÍCULOS =====================
-       ========================================================= */
-    /**
-     * Gestiona el submenú de artículos.
-     * Permite añadir artículos o mostrar el listado completo.
-     */
     private void menuArticulos() {
         int opcion;
 
         do {
-            System.out.println("\n------------------------------");
-            System.out.println("     GESTIÓN DE ARTÍCULOS     ");
-            System.out.println("------------------------------");
-            System.out.println("1. Añadir artículo");
-            System.out.println("2. Mostrar artículos");
-            System.out.println("0. Volver");
-            System.out.println("------------------------------");
-            opcion = leerEntero("> Selecciona una opción: ");
+            TerminalUI.showMenu("GESTIÓN DE ARTÍCULOS", new String[]{
+                    "1. Añadir artículo",
+                    "2. Mostrar artículos",
+                    "0. Volver"
+            });
+
+            opcion = leerEntero("Selecciona una opción: ");
 
             switch (opcion) {
                 case 1:
@@ -115,89 +85,58 @@ public class Vista {
                 case 0:
                     break;
                 default:
-                    System.out.println("Opción no válida.");
+                    TerminalUI.error("Opción no válida.");
             }
 
         } while (opcion != 0);
     }
 
-    /**
-     * Solicita los datos de un nuevo artículo y lo añade al sistema.
-     * Primero verifica si el código ya existe para evitar duplicados.
-     */
     private void anadirArticulo() {
-        System.out.println("\n--- Añadir artículo ---");
+        TerminalUI.sectionTitle("AÑADIR ARTÍCULO");
 
-        // 1. Pedimos el código
         String codigo = leerTexto("Código: ");
 
-        // 2. Verificamos si existe, puede lanzar excepción RecursoNoEncontrado si no existe
         try {
             controlador.buscarArticulo(codigo);
-            // Si no lanza excepción, es que existe
-            System.out.println("[ERROR] Ya existe un artículo con código: " + codigo);
+            TerminalUI.error("Ya existe un artículo con código: " + codigo);
             return;
         } catch (RecursoNoEncontradoException e) {
-            // Excepción capturada: El artículo no existe (podemos continuar)
         }
 
-        // 3. Pedimos resto de datos
         String descripcion = leerTexto("Descripción: ");
         double precioVenta = leerDouble("Precio de venta: ");
         double gastosEnvio = leerDouble("Gastos de envío: ");
         int tiempoPreparacionMin = leerEntero("Tiempo de preparación (minutos): ");
 
-        // 4. Añadimos el artículo, pero puede lanzar excepción YaExiste así que se maneja
         try {
-            controlador.anadirArticulo(codigo, descripcion, precioVenta,
-                    gastosEnvio, tiempoPreparacionMin);
-            System.out.println("\n[INFO] Artículo añadido correctamente.");
+            controlador.anadirArticulo(codigo, descripcion, precioVenta, gastosEnvio, tiempoPreparacionMin);
+            TerminalUI.success("Artículo añadido correctamente.");
+            TerminalUI.sciFiDivider();
         } catch (YaExisteException e) {
-            // Excepción capturada: Alguien añadió el mismo artículo justo después de nuestra comprobación
-            System.out.println(e.getMessage());
+            TerminalUI.error(e.getMessage());
         }
     }
 
-    /**
-     * Muestra por pantalla todos los artículos registrados.
-     * Si no hay artículos, muestra un mensaje informativo.
-     */
     private void mostrarArticulos() {
-        System.out.println("\nListado de artículos:");
-
-        List<Articulo> articulos = controlador.obtenerTodosArticulos();
-
-        if (articulos.isEmpty()) {
-            System.out.println("No hay artículos registrados.");
-        } else {
-            for (Articulo a : articulos) {
-                System.out.println(a);
-            }
-        }
+        TerminalUI.sectionTitle("LISTADO DE ARTÍCULOS");
+        TerminalUI.showArticlesTable(controlador.obtenerTodosArticulos());
     }
-    /* =========================================================
-       ================= MENÚ DE CLIENTES =====================
-       ========================================================= */
-    /**
-     * Gestiona el submenú de clientes.
-     * Permite añadir, buscar, mostrar y eliminar clientes.
-     */
+
     private void menuClientes() {
         int opcion;
 
         do {
-            System.out.println("\n------------------------------");
-            System.out.println("      GESTIÓN DE CLIENTES     ");
-            System.out.println("------------------------------");
-            System.out.println("1. Añadir cliente");
-            System.out.println("2. Buscar cliente");
-            System.out.println("3. Mostrar todos los clientes");
-            System.out.println("4. Mostrar clientes estándar");
-            System.out.println("5. Mostrar clientes premium");
-            System.out.println("6. Eliminar cliente");
-            System.out.println("0. Volver");
-            System.out.println("------------------------------");
-            opcion = leerEntero("> Selecciona una opción: ");
+            TerminalUI.showMenu("GESTIÓN DE CLIENTES", new String[]{
+                    "1. Añadir cliente",
+                    "2. Buscar cliente",
+                    "3. Mostrar todos los clientes",
+                    "4. Mostrar clientes estándar",
+                    "5. Mostrar clientes premium",
+                    "6. Eliminar cliente",
+                    "0. Volver"
+            });
+
+            opcion = leerEntero("Selecciona una opción: ");
 
             switch (opcion) {
                 case 1:
@@ -221,134 +160,105 @@ public class Vista {
                 case 0:
                     break;
                 default:
-                    System.out.println("Opción no válida.");
+                    TerminalUI.error("Opción no válida.");
             }
 
         } while (opcion != 0);
     }
 
-    /**
-     * Solicita los datos de un nuevo cliente y lo añade al sistema.
-     * Valída el formato del email y que no exista previamente.
-     */
     private void anadirCliente() {
-        System.out.println("\n--- Añadir Cliente ---");
-        // 1. Pedimos el email
+        TerminalUI.sectionTitle("AÑADIR CLIENTE");
+
         String email = leerTexto("Email: ");
 
-        // 2. Validamos formato del email usando el controlador
         if (!controlador.emailValido(email)) {
-            System.out.println("[ERROR] Email inválido: " + email);
+            TerminalUI.error("Email inválido: " + email);
             return;
         }
 
-        // 3. Verificamos si existe email, puede lanzar excepción RecursoNoEncontrado si no existe
         try {
-            controlador.buscarCliente(email); // Si no lanza excepción, es que ya existe
-            System.out.println("[ERROR] Ya existe un cliente con email: " + email);
+            controlador.buscarCliente(email);
+            TerminalUI.error("Ya existe un cliente con email: " + email);
             return;
         } catch (RecursoNoEncontradoException e) {
-            // Excepción capturada: El cliente no existe (podemos continuar)
         }
 
-        // 4. Pedimos el resto de datos
         String nombre = leerTexto("Nombre: ");
         String domicilio = leerTexto("Domicilio: ");
         String nif = leerTexto("NIF: ");
         int tipoCliente = leerEntero("Tipo de cliente (1- Estándar, 2- Premium): ");
 
-        // 5. Añadimos el cliente, puede lanzar varias excepciones así que se manejan
         try {
             controlador.anadirCliente(email, nombre, domicilio, nif, tipoCliente);
-            System.out.println("\n[INFO] Cliente añadido correctamente.");
+            TerminalUI.success("Cliente añadido correctamente.");
+            TerminalUI.sciFiDivider();
         } catch (EmailInvalidoException | TipoClienteInvalidoException | YaExisteException e) {
-            System.out.println(e.getMessage()); // Capturamos cualquier excepción durante la creación
+            TerminalUI.error(e.getMessage());
         }
     }
 
-    /**
-     * Busca un cliente por su email y muestra sus datos.
-     */
-    private void buscarCliente(){
+    private void buscarCliente() {
+        TerminalUI.sectionTitle("BUSCAR CLIENTE");
+
         String email = leerTexto("Introduce el Email del cliente: ");
 
         try {
-            // Buscamos el cliente, puede lanzar excepción RecursoNoEncontrado si no existe
             Cliente clienteEncontrado = controlador.buscarCliente(email);
-            System.out.println("\n[Datos del Cliente]");
-            System.out.println(clienteEncontrado);
+            TerminalUI.showClientCard(clienteEncontrado);
         } catch (RecursoNoEncontradoException e) {
-            System.out.println(e.getMessage()); // Excepción capturada: El cliente no existe
+            TerminalUI.error(e.getMessage());
         }
     }
 
-    /**
-     * Muestra todos los clientes registrados.
-     */
-    private void obtenerTodosClientes(){
-        System.out.println("\nListado de Clientes:");
+    private void obtenerTodosClientes() {
+        TerminalUI.sectionTitle("LISTADO DE TODOS LOS CLIENTES");
         imprimirClientes("No hay clientes registrados.", controlador.obtenerTodosClientes());
     }
 
-    /**
-     * Muestra solo los clientes de tipo Estándar.
-     */
-    private void obtenerClientesEstandar(){
-        System.out.println("\nListado de Clientes Estándar:");
+    private void obtenerClientesEstandar() {
+        TerminalUI.sectionTitle("LISTADO DE CLIENTES ESTÁNDAR");
         imprimirClientes("No hay clientes estándar registrados.", controlador.obtenerClientesEstandar());
     }
 
-    /**
-     * Muestra solo los clientes de tipo Premium.
-     */
-    private void obtenerClientesPremium(){
-        System.out.println("\nListado de Clientes Premium:");
+    private void obtenerClientesPremium() {
+        TerminalUI.sectionTitle("LISTADO DE CLIENTES PREMIUM");
         imprimirClientes("No hay clientes premium registrados.", controlador.obtenerClientesPremium());
     }
 
-    /**
-     * Elimina un cliente del sistema previa confirmación.
-     */
-    private void eliminarCliente(){
-        System.out.println("\nEliminar Cliente");
+    private void eliminarCliente() {
+        TerminalUI.sectionTitle("ELIMINAR CLIENTE");
+
         String email = leerTexto("Introduce el Email del cliente: ");
 
         try {
-            // 1. Buscamos el cliente, puede lanzar excepción RecursoNoEncontrado si no existe
             Cliente aEliminar = controlador.buscarCliente(email);
-            // 2. Lo eliminamos (no lanza excepción)
+
+            TerminalUI.info("Cliente localizado correctamente.");
+            TerminalUI.showClientCard(aEliminar);
+
             controlador.eliminarCliente(email);
 
-            System.out.println("\n[INFO] Cliente eliminado con éxito:");
-            System.out.println(aEliminar);
+            TerminalUI.success("Cliente eliminado con éxito.");
+            TerminalUI.spotlight("REGISTRO ELIMINADO DEL SISTEMA");
 
         } catch (RecursoNoEncontradoException e) {
-            System.out.println(e.getMessage()); // Excepción capturada: El cliente no existe
+            TerminalUI.error(e.getMessage());
         }
     }
 
-    /* =========================================================
-        ================= MENÚ DE PEDIDOS =====================
-       ========================================================= */
-
-    /**
-     * Gestiona el submenú de pedidos.
-     * Permite añadir, eliminar y mostrar pedidos.
-     */
     private void menuPedidos() {
         int opcion;
 
         do {
-            System.out.println("\n------------------------------");
-            System.out.println("      GESTIÓN DE PEDIDOS      ");
-            System.out.println("------------------------------");
-            System.out.println("1. Añadir pedido");
-            System.out.println("2. Eliminar pedido");
-            System.out.println("3. Mostrar pedidos pendientes");
-            System.out.println("4. Mostrar pedidos enviados");
-            System.out.println("0. Volver");
-            System.out.println("------------------------------");
-            opcion = leerEntero("> Selecciona una opción: ");
+            TerminalUI.showMenu("GESTIÓN DE PEDIDOS", new String[]{
+                    "1. Añadir pedido",
+                    "2. Eliminar pedido",
+                    "3. Mostrar pedidos pendientes",
+                    "4. Mostrar pedidos enviados",
+                    "0. Volver"
+            });
+
+            opcion = leerEntero("Selecciona una opción: ");
 
             switch (opcion) {
                 case 1:
@@ -366,186 +276,145 @@ public class Vista {
                 case 0:
                     break;
                 default:
-                    System.out.println("Opción no válida.");
+                    TerminalUI.error("Opción no válida.");
             }
 
         } while (opcion != 0);
     }
 
-    /**
-     * Añade un nuevo pedido al sistema.
-     * Si el cliente no existe, lo crea automáticamente.
-     */
     private void anadirPedido() {
-        System.out.println("\n--- Añadir pedido ---");
+        TerminalUI.sectionTitle("AÑADIR PEDIDO");
 
-        // 1. Pedimos email del cliente
         String emailCliente = leerTexto("Email del cliente: ");
         Cliente cliente;
 
-        // 2. Buscamos el cliente, puede lanzar excepción RecursoNoEncontrado si no existe
         try {
             cliente = controlador.buscarCliente(emailCliente);
-            System.out.println("[INFO] Cliente encontrado: " + cliente.getNombre());
+            TerminalUI.info("Cliente encontrado: " + cliente.getNombre());
 
-        } catch (RecursoNoEncontradoException e) {   // Excepción capturada: Cliente no existe, procedemos a crearlo
-            System.out.println("[INFO] Cliente no existe. Se creará automáticamente.\n");
+        } catch (RecursoNoEncontradoException e) {
+            TerminalUI.warning("Cliente no existe. Se creará automáticamente.");
+
             String nombre = leerTexto("Nombre: ");
             String domicilio = leerTexto("Domicilio: ");
             String nif = leerTexto("NIF: ");
             int tipo = leerEntero("Tipo cliente (1-Estándar, 2-Premium): ");
 
-            try { // Intentamos crear el cliente, puede lanzar varias excepciones
+            try {
                 boolean creado = controlador.anadirCliente(emailCliente, nombre, domicilio, nif, tipo);
                 if (!creado) {
-                    System.out.println("[ERROR] No se pudo crear el cliente. Pedido cancelado.");
+                    TerminalUI.error("No se pudo crear el cliente. Pedido cancelado.");
                     return;
                 }
-                // 3. Cliente creado
+
                 cliente = controlador.buscarCliente(emailCliente);
-                System.out.println("[INFO] Cliente creado correctamente: " + cliente.getNombre() + "\n");
+                TerminalUI.success("Cliente creado correctamente: " + cliente.getNombre());
 
             } catch (EmailInvalidoException | TipoClienteInvalidoException | YaExisteException |
                      RecursoNoEncontradoException ex) {
-                System.out.println(ex.getMessage()); // Capturamos cualquier excepción durante la creación
+                TerminalUI.error(ex.getMessage());
                 return;
             }
         }
 
-        // 4. Creación del pedido, puede lanzar excepción RecursoNoEncontrado
         try {
             String codigoArticulo = leerTexto("Código del artículo: ");
-            // Buscamos el artículo, puede lanzar excepción RecursoNoEncontrado si no existe
             Articulo articulo = controlador.buscarArticulo(codigoArticulo);
 
-            System.out.println("[Artículo: " + articulo.getDescripcion() + " - Precio: " + articulo.getPrecioVenta() + "€]");
+            TerminalUI.showArticleCard(articulo);
 
             int cantidad = leerEntero("Cantidad: ");
             int tiempoTotal = articulo.getTiempoPreparacionMin() * cantidad;
 
-            // Creamos el pedido, puede lanzar excepción RecursoNoEncontrado
             Pedido pedido = controlador.anadirPedido(emailCliente, codigoArticulo, cantidad);
 
-            System.out.println("\n[INFO] Pedido creado correctamente para " + cliente.getNombre() + ":");
-            System.out.println("Artículo: " + articulo.getDescripcion() + " x" + cantidad);
-            System.out.println("Tiempo estimado: " + tiempoTotal + " minutos");
-            System.out.println(pedido);
+            TerminalUI.success("Pedido creado correctamente para " + cliente.getNombre() + ".");
+            TerminalUI.info("Tiempo estimado: " + tiempoTotal + " minutos");
+            TerminalUI.showOrderCard(pedido);
+            TerminalUI.spotlight("OPERACIÓN COMPLETADA CON ÉXITO");
 
         } catch (RecursoNoEncontradoException e) {
-            System.out.println(e.getMessage()); // Excepción capturada: Artículo no encontrado
+            TerminalUI.error(e.getMessage());
         }
     }
 
-    /**
-     * Elimina un pedido si aún puede cancelarse.
-     */
     private void eliminarPedido() {
-        System.out.println("\nEliminar pedido");
+        TerminalUI.sectionTitle("ELIMINAR PEDIDO");
+
         int numeroPedido = leerEntero("Número de pedido: ");
 
-        try { // Eliminamos el pedido, puede lanzar excepciones: RecursoNoEncontrado / PedidoNoCancelable
+        try {
             controlador.eliminarPedido(numeroPedido);
-            System.out.println("\n[OK] Pedido eliminado correctamente.");
+            TerminalUI.success("Pedido eliminado correctamente.");
+            TerminalUI.spotlight("PEDIDO CANCELADO");
         } catch (RecursoNoEncontradoException | PedidoNoCancelableException e) {
-            System.out.println(e.getMessage()); // Excepciones capturadas durante la eliminación
+            TerminalUI.error(e.getMessage());
         }
     }
 
-    /**
-     * Muestra los pedidos pendientes, opcionalmente filtrados por email.
-     */
     private void mostrarPedidosPendientes() {
-        System.out.println("\nMostrar pedidos pendientes");
+        TerminalUI.sectionTitle("PEDIDOS PENDIENTES");
+
         String emailFiltro = leerTexto("Filtrar por email del cliente (dejar vacío para todos): ");
-        if(emailFiltro.isEmpty()) emailFiltro = null;
+        if (emailFiltro.isEmpty()) emailFiltro = null;
 
         List<Pedido> pedidos = controlador.obtenerPedidosPendientes(emailFiltro);
+
         if (pedidos.isEmpty()) {
-            System.out.println("No hay pedidos pendientes que mostrar.");
+            TerminalUI.empty("No hay pedidos pendientes que mostrar.");
         } else {
-            pedidos.forEach(System.out::println);
+            TerminalUI.showOrdersTable(pedidos);
         }
     }
 
-    /**
-     * Muestra los pedidos enviados, opcionalmente filtrados por email.
-     */
     private void mostrarPedidosEnviados() {
-        System.out.println("\nMostrar pedidos enviados");
+        TerminalUI.sectionTitle("PEDIDOS ENVIADOS");
+
         String emailFiltro = leerTexto("Filtrar por email del cliente (dejar vacío para todos): ");
-        if(emailFiltro.isEmpty()) emailFiltro = null;
+        if (emailFiltro.isEmpty()) emailFiltro = null;
 
         List<Pedido> pedidos = controlador.obtenerPedidosEnviados(emailFiltro);
+
         if (pedidos.isEmpty()) {
-            System.out.println("No hay pedidos enviados que mostrar.");
+            TerminalUI.empty("No hay pedidos enviados que mostrar.");
         } else {
-            pedidos.forEach(System.out::println);
+            TerminalUI.showOrdersTable(pedidos);
         }
     }
-    /* =========================================================
-       ================== MÉTODOS AUXILIARES ===================
-       ========================================================= */
 
-    /**
-     * Lee una línea de texto introducida por el usuario.
-     *
-     * @param mensaje Mensaje a mostrar al usuario
-     * @return Texto introducido
-     */
     private String leerTexto(String mensaje) {
-        System.out.print(mensaje);
+        TerminalUI.prompt(mensaje);
         return teclado.nextLine();
     }
 
-    /**
-     * Lee un número entero introducido por el usuario con validación.
-     * Reintenta hasta que se introduzca un valor válido.
-     *
-     * @param mensaje Mensaje a mostrar al usuario
-     * @return Número entero introducido
-     */
     private int leerEntero(String mensaje) {
         while (true) {
-            System.out.print(mensaje);
+            TerminalUI.prompt(mensaje);
             String linea = teclado.nextLine().trim();
 
             if (linea.isEmpty()) {
-                System.out.println("[ERROR] No se permiten valores vacíos.");
+                TerminalUI.error("No se permiten valores vacíos.");
                 continue;
             }
 
             try {
                 return Integer.parseInt(linea);
             } catch (NumberFormatException e) {
-                System.out.println("[ERROR] Debes introducir un número válido.");
+                TerminalUI.error("Debes introducir un número válido.");
             }
         }
     }
 
-    /**
-     * Lee un número decimal introducido por el usuario.
-     *
-     * @param mensaje Mensaje a mostrar al usuario
-     * @return Número decimal introducido
-     */
     private double leerDouble(String mensaje) {
-        System.out.print(mensaje);
+        TerminalUI.prompt(mensaje);
         return Double.parseDouble(teclado.nextLine());
     }
 
-    /**
-     * Imprime una lista de clientes con un mensaje personalizado si está vacía.
-     *
-     * @param mensajePersonalizado Mensaje a mostrar si la lista está vacía
-     * @param clientes Lista de clientes a imprimir
-     */
     private void imprimirClientes(String mensajePersonalizado, List<Cliente> clientes) {
         if (clientes.isEmpty()) {
-            System.out.println(mensajePersonalizado);
+            TerminalUI.empty(mensajePersonalizado);
         } else {
-            for (Cliente c : clientes) {
-                System.out.println(c);
-            }
+            TerminalUI.showClientsTable(clientes);
         }
     }
 }
