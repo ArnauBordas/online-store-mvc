@@ -11,19 +11,33 @@ import java.util.Scanner;
 
 /**
  * Clase que gestiona la interacción con el usuario a través de la consola.
- * Solo se ha mejorado la presentación visual.
- * No modifica la lógica del programa.
+ *
+ * Se encarga de mostrar los menús, solicitar datos al usuario y mostrar los resultados.
+ * En el patrón MVC, la Vista no accede directamente al Modelo, sino que se comunica
+ * únicamente a través del Controlador.
+ *
+ * @author BugBusters
+ * @version 1.0
+ * @since 1.0
  */
 public class Vista {
 
     private final Scanner teclado;
     private final Controlador controlador;
 
+    /**
+     * Constructor que inicializa la vista.
+     * Crea el Scanner para leer de teclado y el Controlador para comunicarse con el modelo.
+     */
     public Vista() {
         teclado = new Scanner(System.in);
         controlador = new Controlador();
     }
 
+    /**
+     * Inicia el bucle principal del programa.
+     * Muestra el menú principal y procesa las opciones hasta que el usuario elija salir.
+     */
     public void iniciar() {
         int opcion;
 
@@ -54,6 +68,12 @@ public class Vista {
         } while (opcion != 0);
     }
 
+    /* =========================================================
+       =================== MENÚ PRINCIPAL ======================
+       ========================================================= */
+    /**
+     * Muestra el menú principal con las opciones principales disponibles.
+     */
     private void mostrarMenuPrincipal() {
         TerminalUI.showMenu("MENÚ PRINCIPAL", new String[]{
                 "1. Gestión de artículos",
@@ -63,6 +83,10 @@ public class Vista {
         });
     }
 
+    /**
+     * Gestiona el submenú de artículos.
+     * Permite añadir artículos o mostrar el listado completo.
+     */
     private void menuArticulos() {
         int opcion;
 
@@ -91,6 +115,10 @@ public class Vista {
         } while (opcion != 0);
     }
 
+    /**
+     * Solicita los datos de un nuevo artículo y lo añade al sistema.
+     * Primero verifica si el código ya existe para evitar duplicados.
+     */
     private void anadirArticulo() {
         TerminalUI.sectionTitle("AÑADIR ARTÍCULO");
 
@@ -117,11 +145,22 @@ public class Vista {
         }
     }
 
+    /**
+     * Muestra por pantalla todos los artículos registrados.
+     * Si no hay artículos, muestra un mensaje informativo.
+     */
     private void mostrarArticulos() {
         TerminalUI.sectionTitle("LISTADO DE ARTÍCULOS");
         TerminalUI.showArticlesTable(controlador.obtenerTodosArticulos());
     }
 
+    /* =========================================================
+       ================= MENÚ DE CLIENTES =====================
+       ========================================================= */
+    /**
+     * Gestiona el submenú de clientes.
+     * Permite añadir, buscar, mostrar y eliminar clientes.
+     */
     private void menuClientes() {
         int opcion;
 
@@ -166,6 +205,10 @@ public class Vista {
         } while (opcion != 0);
     }
 
+    /**
+     * Solicita los datos de un nuevo cliente y lo añade al sistema.
+     * Valída el formato del email y que no exista previamente.
+     */
     private void anadirCliente() {
         TerminalUI.sectionTitle("AÑADIR CLIENTE");
 
@@ -197,6 +240,9 @@ public class Vista {
         }
     }
 
+    /**
+     * Busca un cliente por su email y muestra sus datos.
+     */
     private void buscarCliente() {
         TerminalUI.sectionTitle("BUSCAR CLIENTE");
 
@@ -210,21 +256,33 @@ public class Vista {
         }
     }
 
+    /**
+     * Muestra todos los clientes registrados.
+     */
     private void obtenerTodosClientes() {
         TerminalUI.sectionTitle("LISTADO DE TODOS LOS CLIENTES");
         imprimirClientes("No hay clientes registrados.", controlador.obtenerTodosClientes());
     }
 
+    /**
+     * Muestra solo los clientes de tipo Estándar.
+     */
     private void obtenerClientesEstandar() {
         TerminalUI.sectionTitle("LISTADO DE CLIENTES ESTÁNDAR");
         imprimirClientes("No hay clientes estándar registrados.", controlador.obtenerClientesEstandar());
     }
 
+    /**
+     * Muestra solo los clientes de tipo Premium.
+     */
     private void obtenerClientesPremium() {
         TerminalUI.sectionTitle("LISTADO DE CLIENTES PREMIUM");
         imprimirClientes("No hay clientes premium registrados.", controlador.obtenerClientesPremium());
     }
 
+    /**
+     * Elimina un cliente del sistema previa confirmación.
+     */
     private void eliminarCliente() {
         TerminalUI.sectionTitle("ELIMINAR CLIENTE");
 
@@ -246,6 +304,14 @@ public class Vista {
         }
     }
 
+    /* =========================================================
+        ================= MENÚ DE PEDIDOS =====================
+       ========================================================= */
+
+    /**
+     * Gestiona el submenú de pedidos.
+     * Permite añadir, eliminar y mostrar pedidos.
+     */
     private void menuPedidos() {
         int opcion;
 
@@ -282,6 +348,10 @@ public class Vista {
         } while (opcion != 0);
     }
 
+    /**
+     * Añade un nuevo pedido al sistema.
+     * Si el cliente no existe, lo crea automáticamente.
+     */
     private void anadirPedido() {
         TerminalUI.sectionTitle("AÑADIR PEDIDO");
 
@@ -338,6 +408,9 @@ public class Vista {
         }
     }
 
+    /**
+     * Elimina un pedido si aún puede cancelarse.
+     */
     private void eliminarPedido() {
         TerminalUI.sectionTitle("ELIMINAR PEDIDO");
 
@@ -352,6 +425,9 @@ public class Vista {
         }
     }
 
+    /**
+     * Muestra los pedidos pendientes, opcionalmente filtrados por email.
+     */
     private void mostrarPedidosPendientes() {
         TerminalUI.sectionTitle("PEDIDOS PENDIENTES");
 
@@ -367,6 +443,9 @@ public class Vista {
         }
     }
 
+    /**
+     * Muestra los pedidos enviados, opcionalmente filtrados por email.
+     */
     private void mostrarPedidosEnviados() {
         TerminalUI.sectionTitle("PEDIDOS ENVIADOS");
 
@@ -382,11 +461,28 @@ public class Vista {
         }
     }
 
+    /* =========================================================
+       ================== MÉTODOS AUXILIARES ===================
+       ========================================================= */
+
+    /**
+     * Lee una línea de texto introducida por el usuario.
+     *
+     * @param mensaje Mensaje a mostrar al usuario
+     * @return Texto introducido
+     */
     private String leerTexto(String mensaje) {
         TerminalUI.prompt(mensaje);
         return teclado.nextLine();
     }
 
+    /**
+     * Lee un número entero introducido por el usuario con validación.
+     * Reintenta hasta que se introduzca un valor válido.
+     *
+     * @param mensaje Mensaje a mostrar al usuario
+     * @return Número entero introducido
+     */
     private int leerEntero(String mensaje) {
         while (true) {
             TerminalUI.prompt(mensaje);
@@ -405,11 +501,23 @@ public class Vista {
         }
     }
 
+    /**
+     * Lee un número decimal introducido por el usuario.
+     *
+     * @param mensaje Mensaje a mostrar al usuario
+     * @return Número decimal introducido
+     */
     private double leerDouble(String mensaje) {
         TerminalUI.prompt(mensaje);
         return Double.parseDouble(teclado.nextLine());
     }
 
+    /**
+     * Imprime una lista de clientes con un mensaje personalizado si está vacía.
+     *
+     * @param mensajePersonalizado Mensaje a mostrar si la lista está vacía
+     * @param clientes Lista de clientes a imprimir
+     */
     private void imprimirClientes(String mensajePersonalizado, List<Cliente> clientes) {
         if (clientes.isEmpty()) {
             TerminalUI.empty(mensajePersonalizado);
