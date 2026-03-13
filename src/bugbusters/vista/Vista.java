@@ -214,8 +214,10 @@ public class Vista {
 
         String email = leerTexto("Email: ");
 
-        if (!controlador.emailValido(email)) {
-            TerminalUI.error("Email inválido: " + email);
+        try {
+            controlador.emailValido(email);
+        } catch (EmailInvalidoException e) {
+            TerminalUI.error(e.getMessage());
             return;
         }
 
@@ -235,7 +237,7 @@ public class Vista {
             controlador.anadirCliente(email, nombre, domicilio, nif, tipoCliente);
             TerminalUI.success("Cliente añadido correctamente.");
             TerminalUI.sciFiDivider();
-        } catch (EmailInvalidoException | TipoClienteInvalidoException | YaExisteException e) {
+        } catch (TipoClienteInvalidoException | YaExisteException e) {
             TerminalUI.error(e.getMessage());
         }
     }
@@ -359,6 +361,13 @@ public class Vista {
         Cliente cliente;
 
         try {
+            controlador.emailValido(emailCliente);
+        } catch (EmailInvalidoException e) {
+            TerminalUI.error(e.getMessage());
+            return;
+        }
+
+        try {
             cliente = controlador.buscarCliente(emailCliente);
             TerminalUI.info("Cliente encontrado: " + cliente.getNombre());
 
@@ -380,7 +389,7 @@ public class Vista {
                 cliente = controlador.buscarCliente(emailCliente);
                 TerminalUI.success("Cliente creado correctamente: " + cliente.getNombre());
 
-            } catch (EmailInvalidoException | TipoClienteInvalidoException | YaExisteException |
+            } catch (TipoClienteInvalidoException | YaExisteException |
                      RecursoNoEncontradoException ex) {
                 TerminalUI.error(ex.getMessage());
                 return;

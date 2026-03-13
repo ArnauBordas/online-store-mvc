@@ -200,9 +200,13 @@ public class Controlador {
      * @param email Email a validar
      * @return true si el email tiene un formato válido, false en caso contrario
      */
-    public boolean emailValido(String email) {
+    public boolean emailValido (String email) throws EmailInvalidoException {
         String regex = "^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+\\.[A-Za-z]+$";
-        return email != null && email.matches(regex);
+        // 1. Validar formato del email
+        if (email == null || !email.matches(regex)) {
+            throw new EmailInvalidoException(email); // Lanzamos excepción si el email no es válido
+        }
+        return true;
     }
 
     /**
@@ -219,19 +223,14 @@ public class Controlador {
      * @throws YaExisteException Si ya existe un cliente con el mismo email
      */
     public boolean anadirCliente(String email, String nombre, String domicilio, String nif, int tipoCliente)
-            throws EmailInvalidoException, TipoClienteInvalidoException, YaExisteException {
+            throws TipoClienteInvalidoException, YaExisteException {
 
-        // 1. Validar formato del email
-        if (!emailValido(email)) { // Lanzamos excepción si el email no es válido
-            throw new EmailInvalidoException(email);
-        }
-
-        // 2. Verificar si ya existe
+        // 1. Verificar si ya existe
         if (datos.existeCliente(email)) { // Lanzamos excepción si ya existe
             throw new YaExisteException("cliente", email);
         }
 
-        // 3. Crear cliente según tipo
+        // 2. Crear cliente según tipo
         Cliente nuevoCliente;
         if (tipoCliente == 1) {
             nuevoCliente = new ClienteEstandar(email, nombre, domicilio, nif);
@@ -241,7 +240,7 @@ public class Controlador {
             throw new TipoClienteInvalidoException(tipoCliente);
         }
 
-        // 4. Guardar cliente
+        // 3. Guardar cliente
         datos.anadirCliente(nuevoCliente); // No lanza excepciones
         return true;
     }
