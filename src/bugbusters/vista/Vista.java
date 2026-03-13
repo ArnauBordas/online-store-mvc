@@ -121,7 +121,7 @@ public class Vista {
      */
     private void anadirArticulo() {
         TerminalUI.sectionTitle("AÑADIR ARTÍCULO");
-        String codigo = leerTexto("Código: ");
+        String codigo = leerTextoNoVacio("Código: ");
 
         try {
             controlador.buscarArticulo(codigo);
@@ -130,7 +130,7 @@ public class Vista {
         } catch (RecursoNoEncontradoException e) {
         }
 
-        String descripcion = leerTexto("Descripción: ");
+        String descripcion = leerTextoNoVacio("Descripción: ");
         double precioVenta = leerDouble("Precio de venta: ");
         double gastosEnvio = leerDouble("Gastos de envío: ");
         int tiempoPreparacionMin = leerEntero("Tiempo de preparación (minutos): ");
@@ -138,10 +138,10 @@ public class Vista {
         try {
             controlador.anadirArticulo(codigo, descripcion, precioVenta, gastosEnvio, tiempoPreparacionMin);
             TerminalUI.success("Artículo añadido correctamente.");
-            TerminalUI.sciFiDivider();
         } catch (YaExisteException e) {
             TerminalUI.exception(e.getMessage());
         }
+        TerminalUI.sciFiDivider();
     }
 
     /**
@@ -210,7 +210,7 @@ public class Vista {
      */
     private void anadirCliente() {
         TerminalUI.sectionTitle("AÑADIR CLIENTE");
-        String email = leerTexto("Email: ");
+        String email = leerTextoNoVacio("Email: ");
 
         // Validar formato del email
         try {
@@ -229,9 +229,9 @@ public class Vista {
         }
 
         // Si no salta excepción, pedir el resto de datos
-        String nombre = leerTexto("Nombre: ");
-        String domicilio = leerTexto("Domicilio: ");
-        String nif = leerTexto("NIF: ");
+        String nombre = leerTextoNoVacio("Nombre: ");
+        String domicilio = leerTextoNoVacio("Domicilio: ");
+        String nif = leerTextoNoVacio("NIF: ");
         int tipoCliente = leerEntero("Tipo de cliente (1- Estándar, 2- Premium): ");
 
         try {
@@ -249,7 +249,7 @@ public class Vista {
     private void buscarCliente() {
         TerminalUI.sectionTitle("BUSCAR CLIENTE");
 
-        String email = leerTexto("Introduce el Email del cliente: ");
+        String email = leerTextoNoVacio("Introduce el Email del cliente: ");
 
         try {
             Cliente clienteEncontrado = controlador.buscarCliente(email);
@@ -290,7 +290,7 @@ public class Vista {
     private void eliminarCliente() {
         TerminalUI.sectionTitle("ELIMINAR CLIENTE");
 
-        String email = leerTexto("Introduce el Email del cliente: ");
+        String email = leerTextoNoVacio("Introduce el Email del cliente: ");
 
         try {
             Cliente aEliminar = controlador.buscarCliente(email);
@@ -358,7 +358,7 @@ public class Vista {
      */
     private void anadirPedido() {
         TerminalUI.sectionTitle("AÑADIR PEDIDO");
-        String emailCliente = leerTexto("Email del cliente: ");
+        String emailCliente = leerTextoNoVacio("Email del cliente: ");
 
         // Validar formato del email
         try {
@@ -379,13 +379,13 @@ public class Vista {
 
         } catch (RecursoNoEncontradoException e) { // Si cliente no existe se pregunta si se quiere crear
             TerminalUI.warning("El cliente no existe. ¿Desea crearlo? (s/n): ");
-            String respuesta = leerTexto("");
+            String respuesta = leerTextoNoVacio("");
 
             if (respuesta.equalsIgnoreCase("s")) { // Si la respuesta es "s" se piden datos
                 TerminalUI.info("Procedemos a la creación del cliente.");
-                String nombre = leerTexto("Nombre: ");
-                String domicilio = leerTexto("Domicilio: ");
-                String nif = leerTexto("NIF: ");
+                String nombre = leerTextoNoVacio("Nombre: ");
+                String domicilio = leerTextoNoVacio("Domicilio: ");
+                String nif = leerTextoNoVacio("NIF: ");
                 int tipo = leerEntero("Tipo cliente (1-Estándar, 2-Premium): ");
 
                 try {
@@ -402,7 +402,7 @@ public class Vista {
         }
         // Pedir y validar artículo
         TerminalUI.info("Procedemos a la creación del pedido.");
-        String codigoArticulo = leerTexto("Código del artículo: ");
+        String codigoArticulo = leerTextoNoVacio("Código del artículo: ");
 
         Articulo articulo = null;
         try {
@@ -452,7 +452,7 @@ public class Vista {
      */
     private void mostrarPedidosPendientes() {
         TerminalUI.sectionTitle("PEDIDOS PENDIENTES");
-        String emailFiltro = leerTexto("Filtrar por email del cliente (dejar vacío para todos): ");
+        String emailFiltro = leerTextoOpcional("Filtrar por email del cliente (dejar vacío para todos): ");
 
         try {
             List<Pedido> pedidos = controlador.obtenerPedidosPendientes(emailFiltro);
@@ -472,7 +472,7 @@ public class Vista {
      */
     private void mostrarPedidosEnviados() {
         TerminalUI.sectionTitle("PEDIDOS ENVIADOS");
-        String emailFiltro = leerTexto("Filtrar por email del cliente (dejar vacío para todos): ");
+        String emailFiltro = leerTextoOpcional("Filtrar por email del cliente (dejar vacío para todos): ");
         try {
             List<Pedido> pedidos = controlador.obtenerPedidosEnviados(emailFiltro);
 
@@ -492,14 +492,36 @@ public class Vista {
        ========================================================= */
 
     /**
-     * Lee una línea de texto introducida por el usuario.
+     * Lee una línea de texto introducida por el usuario con validación de no vacío.
+     * Reintenta hasta que se introduzca un valor que no sea vacío ni contenga solo espacios.
      *
-     * @param mensaje Mensaje a mostrar al usuario
-     * @return Texto introducido
+     * @param mensaje Mensaje a mostrar al usuario para solicitar el dato
+     * @return El texto introducido por el usuario, nunca vacío
      */
-    private String leerTexto(String mensaje) {
+    private String leerTextoNoVacio(String mensaje) {
+        while (true) {
+            TerminalUI.prompt(mensaje);
+            String linea = teclado.nextLine().trim();
+
+            if (!linea.isEmpty()) {
+                return linea;
+            }
+
+            TerminalUI.error("El texto no puede estar vacío. Inténtalo de nuevo.");
+        }
+    }
+
+    /**
+     * Lee una línea de texto introducida por el usuario sin validación de contenido.
+     * Permite que el usuario introduzca texto vacío si es necesario.
+     * Útil para filtros opcionales o respuestas que pueden ser vacías.
+     *
+     * @param mensaje Mensaje a mostrar al usuario para solicitar el dato
+     * @return El texto introducido por el usuario (puede ser vacío)
+     */
+    private String leerTextoOpcional(String mensaje) {
         TerminalUI.prompt(mensaje);
-        return teclado.nextLine();
+        return teclado.nextLine().trim();  // Puede devolver cadena vacía
     }
 
     /**
@@ -533,9 +555,29 @@ public class Vista {
      * @param mensaje Mensaje a mostrar al usuario
      * @return Número decimal introducido
      */
+    /**
+     * Lee un número decimal introducido por el usuario con validación.
+     * Reintenta hasta que se introduzca un valor válido.
+     *
+     * @param mensaje Mensaje a mostrar al usuario
+     * @return Número decimal introducido
+     */
     private double leerDouble(String mensaje) {
-        TerminalUI.prompt(mensaje);
-        return Double.parseDouble(teclado.nextLine());
+        while (true) {
+            TerminalUI.prompt(mensaje);
+            String linea = teclado.nextLine().trim();
+
+            if (linea.isEmpty()) {
+                TerminalUI.error("No se permiten valores vacíos.");
+                continue;
+            }
+
+            try {
+                return Double.parseDouble(linea.replace(',', '.'));
+            } catch (NumberFormatException e) {
+                TerminalUI.error("Debes introducir un número válido.\n");
+            }
+        }
     }
 
     /**
