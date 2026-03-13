@@ -410,4 +410,9 @@ public final class TerminalUI {
 
         printGridCard("ARTÍCULO SELECCIONADO", rows, CYAN);
     }
+
+    public static void exception(String message) {
+        System.out.println(color("[EXCEPTION]", RED) + " " + color(message, WHITE));
+    }
+
 }

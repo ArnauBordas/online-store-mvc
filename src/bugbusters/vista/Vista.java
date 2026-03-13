@@ -141,7 +141,7 @@ public class Vista {
             TerminalUI.success("Artículo añadido correctamente.");
             TerminalUI.sciFiDivider();
         } catch (YaExisteException e) {
-            TerminalUI.error(e.getMessage());
+            TerminalUI.exception(e.getMessage());
         }
     }
 
@@ -217,7 +217,7 @@ public class Vista {
         try {
             controlador.emailValido(email);
         } catch (EmailInvalidoException e) {
-            TerminalUI.error(e.getMessage());
+            TerminalUI.exception(e.getMessage());
             return;
         }
 
@@ -238,7 +238,7 @@ public class Vista {
             TerminalUI.success("Cliente añadido correctamente.");
             TerminalUI.sciFiDivider();
         } catch (TipoClienteInvalidoException | YaExisteException e) {
-            TerminalUI.error(e.getMessage());
+            TerminalUI.exception(e.getMessage());
         }
     }
 
@@ -254,7 +254,7 @@ public class Vista {
             Cliente clienteEncontrado = controlador.buscarCliente(email);
             TerminalUI.showClientCard(clienteEncontrado);
         } catch (RecursoNoEncontradoException e) {
-            TerminalUI.error(e.getMessage());
+            TerminalUI.exception(e.getMessage());
         }
     }
 
@@ -302,7 +302,7 @@ public class Vista {
             TerminalUI.spotlight("REGISTRO ELIMINADO DEL SISTEMA");
 
         } catch (RecursoNoEncontradoException e) {
-            TerminalUI.error(e.getMessage());
+            TerminalUI.exception(e.getMessage());
         }
     }
 
@@ -363,7 +363,7 @@ public class Vista {
         try {
             controlador.emailValido(emailCliente);
         } catch (EmailInvalidoException e) {
-            TerminalUI.error(e.getMessage());
+            TerminalUI.exception(e.getMessage());
             return;
         }
 
@@ -413,7 +413,7 @@ public class Vista {
             TerminalUI.spotlight("OPERACIÓN COMPLETADA CON ÉXITO");
 
         } catch (RecursoNoEncontradoException e) {
-            TerminalUI.error(e.getMessage());
+            TerminalUI.exception(e.getMessage());
         }
     }
 
@@ -430,7 +430,7 @@ public class Vista {
             TerminalUI.success("Pedido eliminado correctamente.");
             TerminalUI.spotlight("PEDIDO CANCELADO");
         } catch (RecursoNoEncontradoException | PedidoNoCancelableException e) {
-            TerminalUI.error(e.getMessage());
+            TerminalUI.exception(e.getMessage());
         }
     }
 

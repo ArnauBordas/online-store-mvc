@@ -15,6 +15,6 @@ package bugbusters.modelo.excepciones;
 
 public class EmailInvalidoException extends Exception {
     public EmailInvalidoException(String email) {
-        super("[EXCEPCIÓN] El email '" + email + "' no tiene un formato válido");
+        super("El email '" + email + "' no tiene un formato válido");
     }
 }
