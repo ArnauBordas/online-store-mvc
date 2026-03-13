@@ -14,7 +14,6 @@ public final class TerminalUI {
     }
 
     public static final String RESET = "\u001B[0m";
-
     public static final String CYAN = "\u001B[38;5;51m";
     public static final String ELECTRIC = "\u001B[38;5;45m";
     public static final String VIOLET = "\u001B[38;5;141m";
@@ -198,11 +197,6 @@ public final class TerminalUI {
         System.out.println(midDouble(CYAN));
         System.out.println(rowDoubleCentered("Sistema de gestión en consola · Premium Terminal Edition", CYAN));
         System.out.println(bottomDouble(CYAN));
-
-        // Misma distancia arriba que abajo respecto al separador
-        System.out.println();
-        sciFiDivider();
-        System.out.println();
     }
 
     public static void showGoodbye() {
@@ -266,6 +260,9 @@ public final class TerminalUI {
 
     public static void empty(String message) {
         System.out.println(color("[SIN DATOS] ", YELLOW) + color(message, SILVER));
+    }
+    public static void exception(String message) {
+        System.out.println(color("[EXCEPTION]", RED) + " " + color(message, WHITE));
     }
 
     public static void spotlight(String message) {
@@ -409,10 +406,6 @@ public final class TerminalUI {
         rows.add(new String[]{"Preparación: " + article.getTiempoPreparacionMin() + " min", ""});
 
         printGridCard("ARTÍCULO SELECCIONADO", rows, CYAN);
-    }
-
-    public static void exception(String message) {
-        System.out.println(color("[EXCEPTION]", RED) + " " + color(message, WHITE));
     }
 
 }

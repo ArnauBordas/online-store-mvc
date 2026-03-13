@@ -121,7 +121,6 @@ public class Vista {
      */
     private void anadirArticulo() {
         TerminalUI.sectionTitle("AÑADIR ARTÍCULO");
-
         String codigo = leerTexto("Código: ");
 
         try {
@@ -211,9 +210,9 @@ public class Vista {
      */
     private void anadirCliente() {
         TerminalUI.sectionTitle("AÑADIR CLIENTE");
-
         String email = leerTexto("Email: ");
 
+        // Validar formato del email
         try {
             controlador.emailValido(email);
         } catch (EmailInvalidoException e) {
@@ -221,13 +220,15 @@ public class Vista {
             return;
         }
 
+        // Validar que no exista
         try {
-            controlador.buscarCliente(email);
-            TerminalUI.error("Ya existe un cliente con email: " + email);
+            controlador.existeCliente(email);
+        } catch (YaExisteException e) {
+            TerminalUI.exception(e.getMessage());
             return;
-        } catch (RecursoNoEncontradoException e) {
         }
 
+        // Si no salta excepción, pedir el resto de datos
         String nombre = leerTexto("Nombre: ");
         String domicilio = leerTexto("Domicilio: ");
         String nif = leerTexto("NIF: ");
@@ -236,10 +237,10 @@ public class Vista {
         try {
             controlador.anadirCliente(email, nombre, domicilio, nif, tipoCliente);
             TerminalUI.success("Cliente añadido correctamente.");
-            TerminalUI.sciFiDivider();
-        } catch (TipoClienteInvalidoException | YaExisteException e) {
+        } catch (EmailInvalidoException | TipoClienteInvalidoException | YaExisteException e) {
             TerminalUI.exception(e.getMessage());
         }
+        TerminalUI.sciFiDivider();
     }
 
     /**
@@ -253,7 +254,8 @@ public class Vista {
         try {
             Cliente clienteEncontrado = controlador.buscarCliente(email);
             TerminalUI.showClientCard(clienteEncontrado);
-        } catch (RecursoNoEncontradoException e) {
+
+        } catch (EmailInvalidoException | RecursoNoEncontradoException e) {
             TerminalUI.exception(e.getMessage());
         }
     }
@@ -301,7 +303,7 @@ public class Vista {
             TerminalUI.success("Cliente eliminado con éxito.");
             TerminalUI.spotlight("REGISTRO ELIMINADO DEL SISTEMA");
 
-        } catch (RecursoNoEncontradoException e) {
+        } catch (EmailInvalidoException | RecursoNoEncontradoException e) {
             TerminalUI.exception(e.getMessage());
         }
     }
@@ -356,55 +358,66 @@ public class Vista {
      */
     private void anadirPedido() {
         TerminalUI.sectionTitle("AÑADIR PEDIDO");
-
         String emailCliente = leerTexto("Email del cliente: ");
-        Cliente cliente;
 
+        // Validar formato del email
         try {
             controlador.emailValido(emailCliente);
         } catch (EmailInvalidoException e) {
             TerminalUI.exception(e.getMessage());
             return;
         }
-
+        Cliente cliente = null;
+        // Busca cliente para comprobar si existe
         try {
             cliente = controlador.buscarCliente(emailCliente);
             TerminalUI.info("Cliente encontrado: " + cliente.getNombre());
 
-        } catch (RecursoNoEncontradoException e) {
-            TerminalUI.warning("Cliente no existe. Se creará automáticamente.");
+        } catch (EmailInvalidoException e) {  // Si el email es inválido
+            TerminalUI.exception(e.getMessage());
+            return;
 
-            String nombre = leerTexto("Nombre: ");
-            String domicilio = leerTexto("Domicilio: ");
-            String nif = leerTexto("NIF: ");
-            int tipo = leerEntero("Tipo cliente (1-Estándar, 2-Premium): ");
+        } catch (RecursoNoEncontradoException e) { // Si cliente no existe se pregunta si se quiere crear
+            TerminalUI.warning("El cliente no existe. ¿Desea crearlo? (s/n): ");
+            String respuesta = leerTexto("");
 
-            try {
-                boolean creado = controlador.anadirCliente(emailCliente, nombre, domicilio, nif, tipo);
-                if (!creado) {
-                    TerminalUI.error("No se pudo crear el cliente. Pedido cancelado.");
+            if (respuesta.equalsIgnoreCase("s")) { // Si la respuesta es "s" se piden datos
+                TerminalUI.info("Procedemos a la creación del cliente.");
+                String nombre = leerTexto("Nombre: ");
+                String domicilio = leerTexto("Domicilio: ");
+                String nif = leerTexto("NIF: ");
+                int tipo = leerEntero("Tipo cliente (1-Estándar, 2-Premium): ");
+
+                try {
+                    cliente = controlador.anadirCliente(emailCliente, nombre, domicilio, nif, tipo);
+                    TerminalUI.success("Cliente creado correctamente.\n");
+                } catch (EmailInvalidoException | TipoClienteInvalidoException | YaExisteException ex) {
+                    TerminalUI.exception(ex.getMessage());
                     return;
                 }
-
-                cliente = controlador.buscarCliente(emailCliente);
-                TerminalUI.success("Cliente creado correctamente: " + cliente.getNombre());
-
-            } catch (TipoClienteInvalidoException | YaExisteException |
-                     RecursoNoEncontradoException ex) {
-                TerminalUI.error(ex.getMessage());
+            } else {
+                TerminalUI.error("Operación cancelada."); // Si la respuesta es "n" se cancela
                 return;
             }
         }
+        // Pedir y validar artículo
+        TerminalUI.info("Procedemos a la creación del pedido.");
+        String codigoArticulo = leerTexto("Código del artículo: ");
 
+        Articulo articulo = null;
         try {
-            String codigoArticulo = leerTexto("Código del artículo: ");
-            Articulo articulo = controlador.buscarArticulo(codigoArticulo);
-
+            articulo = controlador.buscarArticulo(codigoArticulo);
             TerminalUI.showArticleCard(articulo);
+        } catch (RecursoNoEncontradoException e) {
+            TerminalUI.exception(e.getMessage());
+            return;
+        }
 
-            int cantidad = leerEntero("Cantidad: ");
-            int tiempoTotal = articulo.getTiempoPreparacionMin() * cantidad;
+        int cantidad = leerEntero("Cantidad: ");
+        int tiempoTotal = articulo.getTiempoPreparacionMin() * cantidad;
 
+        // Crear pedido
+        try {
             Pedido pedido = controlador.anadirPedido(emailCliente, codigoArticulo, cantidad);
 
             TerminalUI.success("Pedido creado correctamente para " + cliente.getNombre() + ".");
@@ -412,7 +425,7 @@ public class Vista {
             TerminalUI.showOrderCard(pedido);
             TerminalUI.spotlight("OPERACIÓN COMPLETADA CON ÉXITO");
 
-        } catch (RecursoNoEncontradoException e) {
+        } catch (EmailInvalidoException | RecursoNoEncontradoException e) {
             TerminalUI.exception(e.getMessage());
         }
     }
@@ -439,16 +452,18 @@ public class Vista {
      */
     private void mostrarPedidosPendientes() {
         TerminalUI.sectionTitle("PEDIDOS PENDIENTES");
-
         String emailFiltro = leerTexto("Filtrar por email del cliente (dejar vacío para todos): ");
-        if (emailFiltro.isEmpty()) emailFiltro = null;
 
-        List<Pedido> pedidos = controlador.obtenerPedidosPendientes(emailFiltro);
+        try {
+            List<Pedido> pedidos = controlador.obtenerPedidosPendientes(emailFiltro);
 
-        if (pedidos.isEmpty()) {
-            TerminalUI.empty("No hay pedidos pendientes que mostrar.");
-        } else {
-            TerminalUI.showOrdersTable(pedidos);
+            if (pedidos.isEmpty()) { // Si la lista está vacía se informa que no hay pedidos
+                TerminalUI.empty("No hay pedidos pendientes que mostrar.");
+            } else {
+                TerminalUI.showOrdersTable(pedidos);
+            }
+        } catch (EmailInvalidoException | RecursoNoEncontradoException e) {
+            TerminalUI.exception(e.getMessage());
         }
     }
 
@@ -457,16 +472,18 @@ public class Vista {
      */
     private void mostrarPedidosEnviados() {
         TerminalUI.sectionTitle("PEDIDOS ENVIADOS");
-
         String emailFiltro = leerTexto("Filtrar por email del cliente (dejar vacío para todos): ");
-        if (emailFiltro.isEmpty()) emailFiltro = null;
+        try {
+            List<Pedido> pedidos = controlador.obtenerPedidosEnviados(emailFiltro);
 
-        List<Pedido> pedidos = controlador.obtenerPedidosEnviados(emailFiltro);
+            if (pedidos.isEmpty()) { // Si la lista está vacía se informa que no hay pedidos
+                TerminalUI.empty("No hay pedidos enviados que mostrar.");
+            } else {
+                TerminalUI.showOrdersTable(pedidos);
+            }
 
-        if (pedidos.isEmpty()) {
-            TerminalUI.empty("No hay pedidos enviados que mostrar.");
-        } else {
-            TerminalUI.showOrdersTable(pedidos);
+        } catch (EmailInvalidoException | RecursoNoEncontradoException e) { // Se lanza si no existe el cliente
+            TerminalUI.exception(e.getMessage());
         }
     }
 
@@ -505,7 +522,7 @@ public class Vista {
             try {
                 return Integer.parseInt(linea);
             } catch (NumberFormatException e) {
-                TerminalUI.error("Debes introducir un número válido.");
+                TerminalUI.error("Debes introducir un número válido.\n");
             }
         }
     }
