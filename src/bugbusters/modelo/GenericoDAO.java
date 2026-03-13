@@ -86,4 +86,12 @@ public class GenericoDAO<K, T> {
     public void eliminar(K llave) {
         datos.remove(llave);
     }
+
+    /**
+     * Permite el uso de stream() para ArrayList dentro de Datos.
+     * @return
+     */
+    public java.util.stream.Stream<T> stream() {
+        return datos.values().stream();
+    }
 }

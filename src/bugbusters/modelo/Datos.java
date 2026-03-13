@@ -29,16 +29,12 @@ public class Datos {
      * Colección de artículos almacenados por código.
      * Se utiliza {@link LinkedHashMap} para mantener el orden de inserción.
      */
-    private Map<String, Articulo> articulos;
-
-    /* =========================================================
-       =================== COLECCIÓN DE PEDIDOS ===============
-       ========================================================= */
+    private GenericoDAO<String, Articulo> articulos;
 
     /**
      * Lista de todos los pedidos realizados en el sistema.
      */
-    private List<Pedido> listaPedidos;
+    private GenericoDAO<Integer, Pedido> pedidos;
 
     /**
      * Último número de pedido generado.
@@ -56,8 +52,8 @@ public class Datos {
      * Constructor que inicializa todas las colecciones vacías.
      */
     public Datos() {
-        articulos = new LinkedHashMap<>();
-        listaPedidos = new ArrayList<>();
+        articulos = new GenericoDAO<>();
+        pedidos = new GenericoDAO<>();
         clientes = new GenericoDAO<>();
         ultimoNumeroPedido = 0;
     }
@@ -72,8 +68,7 @@ public class Datos {
      * @param articulo El artículo a añadir
      */
     public void anadirArticulo(Articulo articulo) {
-        String codigo = articulo.getCodigo().toLowerCase();
-        articulos.put(codigo, articulo);
+        articulos.anadir(articulo.getCodigo().toLowerCase(), articulo);
     }
 
     /**
@@ -83,7 +78,7 @@ public class Datos {
      * @return El objeto Articulo si existe, null si no existe
      */
     public Articulo buscarArticulo(String codigo) {
-        return articulos.get(codigo.toLowerCase());
+        return articulos.buscar(codigo);
     }
 
     /**
@@ -93,7 +88,7 @@ public class Datos {
      * @return true si el artículo existe, false si no existe
      */
     public boolean existeArticulo(String codigo) {
-        return articulos.containsKey(codigo.toLowerCase());
+        return articulos.existe(codigo);
     }
 
     /**
@@ -102,7 +97,7 @@ public class Datos {
      * @return Lista con todos los artículos
      */
     public List<Articulo> obtenerTodosArticulos() {
-        return new ArrayList<>(articulos.values());
+        return articulos.obtenerTodos();
     }
 
     /* =========================================================
@@ -125,16 +120,18 @@ public class Datos {
      * @param pedido El pedido a añadir
      */
     public void anadirPedido(Pedido pedido) {
-        listaPedidos.add(pedido);
+        pedidos.anadir(pedido.getNumeroPedido(), pedido);
     }
 
     /**
      * Elimina un pedido de la lista.
      *
-     * @param pedido El pedido a eliminar
+     * @param numeroPedido El pedido a eliminar
      */
-    public void eliminarPedido(Pedido pedido) {
-        listaPedidos.remove(pedido);
+    public void eliminarPedido(int numeroPedido) {
+        if (pedidos.existe(numeroPedido)) {
+            pedidos.eliminar(numeroPedido);
+        }
     }
 
     /**
@@ -144,10 +141,7 @@ public class Datos {
      * @return El pedido si existe, null si no existe
      */
     public Pedido buscarPedido(int numeroPedido) {
-        for (Pedido p : listaPedidos) {
-            if (p.getNumeroPedido() == numeroPedido) return p;
-        }
-        return null;
+        return pedidos.buscar(numeroPedido);
     }
 
     /**
@@ -155,10 +149,10 @@ public class Datos {
      *
      * @return Lista de pedidos pendientes
      */
-    public List<Pedido> getPedidosPendientes() {
-        return listaPedidos.stream()
+    public ArrayList<Pedido> getPedidosPendientes() {
+        return pedidos.stream()
                 .filter(Pedido::puedeCancelar)
-                .collect(Collectors.toList());
+                .collect(Collectors.toCollection(ArrayList::new));
     }
 
     /**
@@ -167,9 +161,9 @@ public class Datos {
      * @return Lista de pedidos enviados
      */
     public List<Pedido> getPedidosEnviados() {
-        return listaPedidos.stream()
+        return pedidos.stream()
                 .filter(p -> !p.puedeCancelar())
-                .collect(Collectors.toList());
+                .collect(Collectors.toCollection(ArrayList::new));
     }
 
     /* =========================================================

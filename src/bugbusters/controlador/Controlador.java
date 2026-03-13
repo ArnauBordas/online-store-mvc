@@ -154,7 +154,7 @@ public class Controlador {
         if (!pedido.puedeCancelar()) { // Lanzamos excepción si ya está enviado
             throw new PedidoNoCancelableException(numeroPedido);
         }
-        datos.eliminarPedido(pedido); // No lanza excepciones
+        datos.eliminarPedido(numeroPedido); // No lanza excepciones
     }
 
     /**
